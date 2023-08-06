@@ -1,3 +1,13 @@
+3.0 (4 Aug 2021)
+
+- removed everything outside core nosefart (quote: "legacy cruft")
+- replaced OSS with SDL
+- removed dos support
+- removed threading
+- added option to dump wav files
+- added support for clang
+- various smaller fixes
+
 2.9-mls - 2013-05-10
 
 GCC now requires that -lm comes after the object name.  Trivial change
