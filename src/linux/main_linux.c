@@ -31,6 +31,10 @@ and nothing else. */
 #define true TRUE
 #endif
 
+#ifndef false
+#define false FALSE
+#endif
+
 /* This saves the trouble of passing our ONE nsf around the stack all day */
 static nsf_t *nsf = 0;
 
@@ -130,7 +134,7 @@ static void show_help(void) {
     printf("\nOptions:\n");
     printf("\t-h  \tHelp\n");
     printf("\t-v  \tVersion information\n");
-    printf("\n\t-t x\tStart playing track x (default: 1)\n");
+    printf("\n\t-t x\tPlay track x (default: 1)\n");
     printf("\t-s x\tPlay at x times the normal speed\n");
     printf("\t-f x\tUse x sampling rate (default: 44100)\n");
     printf("\t-B x\tUse sample size of x bits (default: 8)\n");
@@ -141,7 +145,7 @@ static void show_help(void) {
            "only)\n");
     printf("\t-i\tJust print file information and exit\n");
     printf("\t-x\tStart with channel x disabled (-123456)\n");
-    printf("\t-o x\tOutput WAV files to directory x\n\n");
+    printf("\t-o x\tOutput WAV file(s) to directory x\n\n");
     printf("\nPlease send bug reports to quadong@users.sf.net\n");
 
     exit(0);
@@ -485,6 +489,7 @@ int main(int argc, char **argv) {
     char *filename;
     char *dumpwavdir;
     int track = 1;
+    bool track_specified = false;
     int done = 0;
     int justdisplayinfo = 0;
     int dumpwav = 0;
@@ -518,6 +523,7 @@ int main(int argc, char **argv) {
             break;
         case 't':
             track = strtol(optarg, 0, 10);
+            track_specified = true;
             break;
         case 'f':
             freq = strtol(optarg, 0, 10);
@@ -589,7 +595,9 @@ int main(int argc, char **argv) {
 
         mkdir(dumpwavdir, 0777);
 
-        for (int i = track; i < nsf->num_songs; i++) {
+        const int last_song = track_specified ? track : nsf->num_songs;
+
+        for (int i = track; i <= last_song; i++) {
             nsf->current_song = i;
 
             // 3 digits, WAV extension, slash, dot and NULL
