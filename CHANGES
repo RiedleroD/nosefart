@@ -1,3 +1,9 @@
+3.1 (6 Aug 2023)
+
+- now, only one track is dumped when it's selected
+- output track lengths in file info
+- fixed the last track being omitted when dumping (off-by-one caused by track indices starting at 1)
+
 3.0 (4 Aug 2021)
 
 - removed everything outside core nosefart (quote: "legacy cruft")
