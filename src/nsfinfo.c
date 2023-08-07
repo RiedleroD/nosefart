@@ -801,48 +801,15 @@ int nsf_info_main(int na, char **a)
   return (err < 0) ? 255 : 0;
 }
 
-void itoa(int n, char * res)
-{
-        if(n < 10)
-        {
-                res[0] = (char)(n) + '0';
-                res[1] = '\0';
-        }
-        else if(n < 100)
-        {
-                res[0] = (char)(n/10) + '0';
-                res[1] = (char)(n%10) + '0';
-                res[2] = '\0';
-        }
-        else if(n < 1000)
-        {
-                res[0] = (char)(n/100) + '0';
-                res[1] = (char)((n/10) % 10)+ '0';
-                res[2] = (char)(n%10) + '0';
-        }
-        else
-                fprintf(stderr, "I'm too dumb to handle numbers over 1000\n");  
-}
-
 /* returns an int whose top bits are the length with introduction
    and bottom bits are the length without introduction */
 unsigned int time_info(char * filename, int track)
 {
-        char * argv[4];
         char argv1[] = "--   ";
-        unsigned int frames, result, wintro, wointro;
-        char num[] = "   ";
 
-        itoa(track, num);
+        snprintf(argv1+2,3,"%d" ,track);
 
-        argv1[2] = num[0];
-        argv1[3] = num[1];
-        argv1[4] = num[2];
-
-        argv[0] = "nsfinfo";
-        argv[1] = filename;
-        argv[2] = argv1;
-        argv[3] = "--AT";
+        char * argv[] = {"nsfinfo", filename, argv1, "--AT"};
 
         return nsf_info_main(4, argv);
 }
