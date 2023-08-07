@@ -38,13 +38,15 @@
 
 /* These should be changed depending on the platform */
 
-typedef  char     int8;
-typedef  short    int16;
-typedef  int      int32;
+#include <stdint.h>
 
-typedef  unsigned char  uint8;
-typedef  unsigned short uint16;
-typedef  unsigned int   uint32;
+typedef  int8_t    int8;
+typedef  int16_t   int16;
+typedef  int32_t   int32;
+
+typedef  uint8_t   uint8;
+typedef  uint16_t  uint16;
+typedef  uint32_t  uint32;
 
 typedef  _Bool    boolean;
 
