@@ -34,32 +34,17 @@
 
 #ifdef __GNUC__
 #define  INLINE      static inline
-#elif defined(WIN32)
-#define  INLINE      static __inline
-#else /* crapintosh? */
-#define  INLINE      static
 #endif
 
 /* These should be changed depending on the platform */
 
+typedef  char     int8;
+typedef  short    int16;
+typedef  int      int32;
 
-
-#ifdef __BEOS__		/* added by Eli Dayan (for compiling under BeOS) */
-	
-	/* use types in the BeOS Support Kit instead */
-	#include <be/support/SupportDefs.h>
-#elif defined (DCPLAYA) /* $$$ added by ben (for compiling with dcplaya) */
-# include <arch/types.h>
-#else	
-	typedef  char     int8;
-	typedef  short    int16;
-	typedef  int      int32;
-
-	typedef  unsigned char  uint8;
-	typedef  unsigned short uint16;
-	typedef  unsigned int   uint32;
-
-#endif
+typedef  unsigned char  uint8;
+typedef  unsigned short uint16;
+typedef  unsigned int   uint32;
 
 typedef  uint8    boolean;
 
@@ -99,6 +84,9 @@ typedef  uint8    boolean;
 
 /*
 ** $Log: types.h,v $
+** Revision 3.1  2023/08/07 13:41:00 riedler
+** removed code for unsupported systems
+**
 ** Revision 1.1  2003/04/08 20:46:46  ben
 ** add new input for NES music file.
 **

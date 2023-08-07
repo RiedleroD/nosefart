@@ -24,7 +24,6 @@
 */
 
 #include <string.h>
-#include "types.h"
 #include "mmc5_snd.h"
 #include "nes_apu.h"
 

@@ -26,6 +26,8 @@
 #ifndef _MMC5_SND_H_
 #define _MMC5_SND_H_
 
+#include "types.h"
+
 #define  MMC5_WRA0    0x5000
 #define  MMC5_WRA1    0x5001
 #define  MMC5_WRA2    0x5002

@@ -26,6 +26,8 @@
 #ifndef _NES_APU_H_
 #define _NES_APU_H_
 
+#include "types.h"
+
 #ifdef __GNUC__
 #define  INLINE      static inline
 #elif defined(WIN32)

@@ -30,16 +30,6 @@
 #ifdef __GNUC__
 #define  __PACKED__  __attribute__ ((packed))
 #define  PATH_SEP    '/'
-#ifdef __DJGPP__
-#include <dpmi.h>
-#include "dos_ints.h"
-#endif
-#elif defined(WIN32)
-#define  __PACKED__
-#define  PATH_SEP    '\\'
-#else /* crapintosh? */
-#define  __PACKED__
-#define  PATH_SEP    ':'
 #endif
 
 extern void osd_loginit(void);

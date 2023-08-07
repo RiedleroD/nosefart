@@ -26,20 +26,17 @@
 #ifndef _DIS6502_H_
 #define _DIS6502_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include "types.h"
 
 extern void nes6502_disasm(uint32 PC, uint8 P, uint8 A, uint8 X, uint8 Y, uint8 S);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 
 #endif /* !_DIS6502_H_ */
 
 /*
 ** $Log: dis6502.h,v $
+** Revision 3.1  2023/08/07 15:01:11  riedler
+** removed weird c++ workaround… even though we aren't using c++ at all… huh?
+**
 ** Revision 1.1  2003/04/08 20:53:00  ben
 ** Adding more files...
 **

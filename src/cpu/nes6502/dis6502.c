@@ -23,7 +23,6 @@
 ** $Id: dis6502.c,v 1.1 2003/04/08 20:53:00 ben Exp $
 */
 
-#include "types.h"
 #include "log.h"
 #include "nes6502.h"
 #include "dis6502.h"

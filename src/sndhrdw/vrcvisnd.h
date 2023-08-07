@@ -26,6 +26,8 @@
 #ifndef _VRCVISND_H_
 #define _VRCVISND_H_
 
+#include "types.h"
+
 typedef struct vrcvirectangle_s
 {
    uint8 reg[3];

@@ -23,7 +23,6 @@
 ** $Id: vrcvisnd.c,v 1.1 2003/04/08 20:53:01 ben Exp $
 */
 
-#include "types.h"
 #include "vrcvisnd.h"
 #include "nes_apu.h"
 

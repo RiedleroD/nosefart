@@ -24,7 +24,6 @@
 */
 
 #include <string.h>
-#include "types.h"
 #include "log.h"
 #include "nes_apu.h"
 #include "nes6502.h"

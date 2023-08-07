@@ -29,6 +29,7 @@
 #define _VRC7_SND_H_
 
 #include "fmopl.h"
+#include "types.h"
 
 /* VRC7 context */
 typedef struct vrc7_s

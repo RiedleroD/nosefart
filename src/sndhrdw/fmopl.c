@@ -1067,6 +1067,7 @@ void YM3812UpdateOne(FM_OPL *OPL, INT16 *buffer, int length)
 		if(rythm)
 			OPL_CALC_RH(S_CH);
 		/* limit check */
+		//TODO: UB?
 		data = Limit( outd[0] , OPL_MAXOUT, OPL_MINOUT );
 		/* store to sound buffer */
 		buf[i] = data >> OPL_OUTSB;
@@ -1183,7 +1184,7 @@ void OPLResetChip(FM_OPL *OPL)
 #endif
 }
 
-/* ----------  Create one of vietual YM3812 ----------       */
+/* ----------  Create one of virtual YM3812 ----------       */
 /* 'rate'  is sampling rate and 'bufsiz' is the size of the  */
 FM_OPL *OPLCreate(int type, int clock, int rate)
 {

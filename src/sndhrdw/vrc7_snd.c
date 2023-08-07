@@ -25,7 +25,6 @@
 */
 
 #include <stdio.h>
-#include "types.h"
 #include "vrc7_snd.h"
 #include "fmopl.h"
 
