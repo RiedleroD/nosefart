@@ -48,6 +48,8 @@ extern void _my_free(void **data);
 extern void mem_checkblocks(void);
 extern void mem_checkleaks(void);
 
+#include "types.h"
+
 extern boolean mem_debug;
 
 #endif   /* _MEMGUARD_H_ */

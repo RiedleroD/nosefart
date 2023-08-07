@@ -162,9 +162,7 @@ int apu_setchan(int chan, boolean enabled)
     return -1;
   }
   old = (apu->mix_enable>>chan) & 1;
-  if (enabled != (boolean)-1) {
-    apu->mix_enable = (apu->mix_enable & ~(1<<chan)) | ((!!enabled)<<chan);
-  }
+  apu->mix_enable = (apu->mix_enable & ~(1<<chan)) | (enabled<<chan);
   return old;
 }
 

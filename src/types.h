@@ -46,7 +46,7 @@ typedef  unsigned char  uint8;
 typedef  unsigned short uint16;
 typedef  unsigned int   uint32;
 
-typedef  uint8    boolean;
+typedef  _Bool    boolean;
 
 #ifndef  TRUE
 #define  TRUE     1

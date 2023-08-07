@@ -19,18 +19,6 @@ just including this is easier than trying to rip out just the relevant bits
 and nothing else. */
 #include <nsfinfo.h>
 
-#ifndef bool
-#define bool boolean
-#endif
-
-#ifndef true
-#define true TRUE
-#endif
-
-#ifndef false
-#define false FALSE
-#endif
-
 /* This saves the trouble of passing our ONE nsf around the stack all day */
 static nsf_t *nsf = 0;
 
@@ -51,7 +39,7 @@ static struct termios oldterm;
 
 /* whether the channels are enabled or not.  Moved out here by Matthew Strait
 so that it could be displayed */
-static bool enabled[6] = {true, true, true, true, true, true};
+static boolean enabled[6] = {TRUE, TRUE, TRUE, TRUE, TRUE, TRUE};
 
 static int pid = 1; /* something non-zero by default */
 
@@ -485,7 +473,7 @@ int main(int argc, char **argv) {
     char *filename;
     char *dumpwavdir;
     int track = 1;
-    bool track_specified = false;
+    boolean track_specified = FALSE;
     int done = 0;
     int justdisplayinfo = 0;
     int dumpwav = 0;
@@ -512,14 +500,14 @@ int main(int argc, char **argv) {
         case '4':
         case '5':
         case '6':
-            enabled[(int)(c - '0' - 1)] = 0;
+            enabled[(int)(c - '0' - 1)] = FALSE;
             break;
         case 'v':
             show_info();
             break;
         case 't':
             track = strtol(optarg, 0, 10);
-            track_specified = true;
+            track_specified = TRUE;
             break;
         case 'f':
             freq = strtol(optarg, 0, 10);
