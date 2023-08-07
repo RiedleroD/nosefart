@@ -1,7 +1,3 @@
-/* Modified by Matthew Strait Oct-Nov 2002 */
-/* Note that this runs in FreeBSD as well as Linux (and may well run in other
-UNIX systems */
-
 #include <SDL2/SDL.h>
 #include <ctype.h>
 #include <fcntl.h>
@@ -322,7 +318,7 @@ static int nsf_handlekey(char ch, int doautocalc, char *filename, int reps) {
 }
 
 /* load the nsf, so we know how to set up the audio */
-static int load_nsf_file(char *filename) {
+static void load_nsf_file(char *filename) {
     nsf_init();
 
     /* load up an NSF file */
@@ -387,7 +383,7 @@ static void play(char *filename, int track, int doautocalc, int reps,
             if (frames >= starting_frame) {
                 SDL_QueueAudio(1, buffer, bufferPos - buffer);
 
-                float bytesPerSecond = (freq * bits) / 8;
+                float bytesPerSecond = (float) (freq * bits) / 8;
 
                 SDL_Delay(
                     ((int)(SDL_GetQueuedAudioSize(1) / bytesPerSecond * 1000)) /
