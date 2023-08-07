@@ -1,8 +1,10 @@
-3.1 (6 Aug 2023)
+3.1 (7 Aug 2023)
 
 - now, only one track is dumped when it's selected
 - output track lengths in file info
 - fixed the last track being omitted when dumping (off-by-one caused by track indices starting at 1)
+- minor changes to dev environment
+- fully removed support for lots of deprecated systems and sound cards
 
 3.0 (4 Aug 2021)
 
