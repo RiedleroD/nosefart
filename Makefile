@@ -74,7 +74,7 @@ uninstall:
 	rm -f $(PREFIX)/bin/$(NAME)
 
 clean:
-	rm -rf nsfobj
+	rm -rf nsfobj compile_commands.json
 
 $(BUILDTOP)/$(NAME): $(OBJECTS)
 	mkdir -p $(sort $(dir $(ALL_OBJECTS)))
@@ -82,4 +82,10 @@ $(BUILDTOP)/$(NAME): $(OBJECTS)
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c $(BUILDTOP)/config.h
 	mkdir -p $(sort $(dir $(ALL_OBJECTS)))
-	$(CC)  $(NSFINFO_CFLAGS) -o $@ -c $<
+	$(CC) $(NSFINFO_CFLAGS) -o $@ -c $<
+
+# from https://sarcasm.github.io/notes/dev/compilation-database.html#clang
+compile_commands.json: CC = clang
+compile_commands.json: CFLAGS += -MJ $@.json
+compile_commands.json: $(ALL_TARGETS)
+	sed -e '1s/^/[\n/' -e '$$s/,$$/\n]/' $(shell find $(BUILDTOP) -iname *.o.json) > compile_commands.json
