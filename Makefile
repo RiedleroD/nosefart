@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS =
+CFLAGS = -std=c99
 LDFLAGS = -lm -lSDL2
 PREFIX = /usr
 WANT_DEBUG=TRUE
