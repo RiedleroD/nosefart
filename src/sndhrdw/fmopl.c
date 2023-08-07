@@ -1015,7 +1015,6 @@ void YM3812UpdateOne(FM_OPL *OPL, INT16 *buffer, int length)
 		if(rythm)
 			OPL_CALC_RH(S_CH);
 		/* limit check */
-		//TODO: UB?
 		data = Limit( outd[0] , OPL_MAXOUT, OPL_MINOUT );
 		/* store to sound buffer */
 		buf[i] = data >> OPL_OUTSB;
