@@ -1,12 +1,6 @@
 #include <SDL2/SDL.h>
-#include <ctype.h>
 #include <fcntl.h>
 #include <getopt.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
 #include <termios.h>
 #include <unistd.h>
 
