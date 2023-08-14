@@ -5,6 +5,7 @@
 - fixed the last track being omitted when dumping (off-by-one caused by track indices starting at 1)
 - minor changes to dev environment
 - fully removed support for lots of deprecated systems and sound cards
+- moved to C99 and cleaned up accordingly
 
 3.0 (4 Aug 2021)
 

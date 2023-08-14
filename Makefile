@@ -5,7 +5,7 @@ PREFIX = /usr
 WANT_DEBUG=TRUE
 
 NAME = nosefart
-VERSION = 3.0.0
+VERSION = 3.1.0
 
 BUILDTOP = nsfobj
 BUILDDIR = $(BUILDTOP)/build
