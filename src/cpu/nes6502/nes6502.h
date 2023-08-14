@@ -109,10 +109,6 @@ typedef struct
    uint8 int_pending;
 } nes6502_context;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 /* Functions which govern the 6502's execution */
 extern void nes6502_init(void);
 extern void nes6502_reset(void);
@@ -128,10 +124,6 @@ extern void nes6502_chk_mem_access(uint8 * access, int flags);
 /* Context get/set */
 extern void nes6502_setcontext(nes6502_context *cpu);
 extern void nes6502_getcontext(nes6502_context *cpu);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 
 #endif /* _NES6502_H_ */
 
