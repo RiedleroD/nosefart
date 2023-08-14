@@ -1225,14 +1225,13 @@ INLINE uint8 _bank_readbyte(uint32 address, const uint8 flags)
 
   ASSERT(nes6502_banks[bank_i]);
 
-  printf("chk_mem_access(acc_nes6502_banks[%d] + %d, %d)\n", bank_i, bank_address, flags);
+  //printf("chk_mem_access(acc_nes6502_banks[%d] + %d, %d)\n", bank_i, bank_address, flags);
 
   if(bank_address > max_access[bank_i])
   {
     max_access[bank_i] = bank_address;
-    printf("max_access[%d] increased to %d\n", bank_i, max_access[bank_i]);
+    //printf("max_access[%d] increased to %d\n", bank_i, max_access[bank_i]);
   }
-  fflush(stdout);
   chk_mem_access(acc_nes6502_banks[bank_i] + bank_address, flags);
 
   return nes6502_banks[bank_i][bank_address];
@@ -1401,12 +1400,10 @@ void nes6502_setcontext(nes6502_context *cpu)
 /* get the current context */
 void nes6502_getcontext(nes6502_context *cpu)
 {
-   int loop;
-
    /* Set the page pointers */
-   for (loop = 0; loop < NES6502_NUMBANKS; loop++) {
-      cpu->mem_page[loop] = nes6502_banks[loop];
-      cpu->acc_mem_page[loop] = acc_nes6502_banks[loop];
+   for (uint8 i = 0; i < NES6502_NUMBANKS; i++) {
+      cpu->mem_page[i] = nes6502_banks[i];
+      cpu->acc_mem_page[i] = acc_nes6502_banks[i];
    }
 
    cpu->read_handler = pmem_read;

@@ -72,11 +72,10 @@ static void nsf_bankswitch(uint32 address, uint8 value)
 
    cpu_page = address & 0x0F;
    roffset = -(cur_nsf->load_addr & 0x0FFF) + ((int)value << 12);
-   offset = cur_nsf->data + roffset;
 
    nes6502_getcontext(cur_nsf->cpu);
-   cur_nsf->cpu->mem_page[cpu_page] = offset;
-   cur_nsf->cpu->acc_mem_page[cpu_page] = offset + cur_nsf->length;
+   cur_nsf->cpu->mem_page[cpu_page] = cur_nsf->data + roffset;
+   cur_nsf->cpu->acc_mem_page[cpu_page] = cur_nsf->acc_data + roffset;
    nes6502_setcontext(cur_nsf->cpu);
 }
 
@@ -258,7 +257,7 @@ static void nsf_inittune(nsf_t *nsf)
    memset(nsf->cpu->acc_mem_page[0], 0, 0x800);
    memset(nsf->cpu->acc_mem_page[6], 0, 0x1000);
    memset(nsf->cpu->acc_mem_page[7], 0, 0x1000);
-   memset(nsf->data+nsf->length, 0, nsf->length);
+   memset(nsf->acc_data, 0, nsf->length);
    nsf->cur_frame = 0;
 /*    nsf->last_access_frame = 0; */
    nsf->cur_frame_end = !nsf->song_frames
@@ -750,13 +749,9 @@ nsf_t * nsf_load_extended(struct nsf_loader_t * loader)
   }
 
   /* Allocate NSF space, and load it up! */
-  {
-    int len = temp_nsf->length;
-    /* $$$ twice memory for access control shadow mem. */
-    len <<= 1;
-   temp_nsf->data = malloc(len);
-  }
-  if (NULL == temp_nsf->data) {
+  temp_nsf->data = malloc(temp_nsf->length);
+  temp_nsf->acc_data = malloc(temp_nsf->length);
+  if (NULL == temp_nsf->data || NULL == temp_nsf->acc_data) {
     log_printf("nsf : [%s] error allocating nsf data\n",
 	       loader->fname(loader));
     goto error;

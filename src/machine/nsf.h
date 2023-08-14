@@ -86,6 +86,7 @@ typedef struct nsf_s
 
    /* things that the NSF player needs */
    uint8  *data;              /* actual NSF data */
+   uint8  *acc_data;          /* shadow NSF data for access control */
    uint32 length;             /* length of data */
    uint32 playback_rate;      /* current playback rate */
    uint8  current_song;       /* current song */
