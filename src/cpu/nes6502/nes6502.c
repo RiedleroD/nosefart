@@ -1117,17 +1117,8 @@
 */
 
 /* register push/pull */
-#ifdef NES6502_MEM_ACCESS_CTRL
-
 # define  PUSH(value)             stack_push((S--),(value))
 # define  PULL()                  stack_pull((++S))
-
-#else
-
-# define  PUSH(value)             stack_page[S--] = (uint8) (value)
-# define  PULL()                  stack_page[++S]
-
-#endif /* #ifdef NES6502_MEM_ACCESS_CTRL */
 
 /* Sets the Z and N flags based on given data, taken from precomputed table */
 #define  SET_NZ_FLAGS(value)     P &= ~(N_FLAG | Z_FLAG); \
@@ -1177,10 +1168,7 @@ static uint8 *stack_page = NULL;
 
 /* access flag for memory 
  * $$$ ben : I add this for the playing time calculation.
- * Only if compiled with NES6502_MEM_ACCESS.
  */
-#ifdef NES6502_MEM_ACCESS_CTRL
-
 uint8 *acc_nes6502_banks[NES6502_NUMBANKS];
 static uint8 *acc_ram = NULL;
 static uint8 *acc_stack_page = NULL;
@@ -1228,53 +1216,32 @@ INLINE void zp_write(register uint32 addr, uint8 v)
 
 #define bank_readbyte(address) _bank_readbyte((address), NES6502_READ_ACCESS)
 #define bank_readbyte_pc(address) _bank_readbyte((address), NES6502_EXE_ACCESS)
-
-#else
-# define chk_mem_access(access, flags)
-
-/*
-** Zero-page helper macros
-*/
-#define  ZP_READ(addr)           ram[(addr)]
-#define  ZP_WRITE(addr, value)   ram[(addr)] = (uint8) (value)
-
-#define bank_readbyte(address)    _bank_readbyte((address))
-#define bank_readbyte_pc(address) _bank_readbyte((address))
-
-#endif /* #ifdef NES6502_MEM_ACCESS_CTRL */
-
-#ifdef NES6502_MEM_ACCESS_CTRL
 int max_access[NES6502_NUMBANKS] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
-INLINE uint8 _bank_readbyte(register uint32 address, const uint8 flags)
-#else
-INLINE uint8 _bank_readbyte(register uint32 address)
-#endif
+INLINE uint8 _bank_readbyte(uint32 address, const uint8 flags)
 {
-   ASSERT(nes6502_banks[address >> NES6502_BANKSHIFT]);
+  const uint32 bank_address = address & NES6502_BANKMASK;
+  const uint8 bank_i = address >> NES6502_BANKSHIFT;
 
-#ifdef NES6502_MEM_ACCESS_CTRL
-   //printf("chk_mem_access(acc_nes6502_banks[%d] + %d, %d)\n", address>>NES6502_BANKSHIFT, address & NES6502_BANKMASK, flags);
+  ASSERT(nes6502_banks[bank_i]);
 
-   if((address & NES6502_BANKMASK) > max_access[address>>NES6502_BANKSHIFT])
-   {
-      max_access[address>>NES6502_BANKSHIFT] = address & NES6502_BANKMASK;
-      //printf("max_access[%d] increased to %d\n", address>>NES6502_BANKSHIFT, max_access[address>>NES6502_BANKSHIFT]);
-   }
-#endif
-   chk_mem_access(acc_nes6502_banks[address>>NES6502_BANKSHIFT]
-		  + (address & NES6502_BANKMASK),
-		  flags);
+  printf("chk_mem_access(acc_nes6502_banks[%d] + %d, %d)\n", bank_i, bank_address, flags);
 
-   return nes6502_banks[address >> NES6502_BANKSHIFT][address & NES6502_BANKMASK];
+  if(bank_address > max_access[bank_i])
+  {
+    max_access[bank_i] = bank_address;
+    printf("max_access[%d] increased to %d\n", bank_i, max_access[bank_i]);
+  }
+  fflush(stdout);
+  chk_mem_access(acc_nes6502_banks[bank_i] + bank_address, flags);
+
+  return nes6502_banks[bank_i][bank_address];
 }
 
 
 INLINE void bank_writebyte(register uint32 address, register uint8 value)
 {
    ASSERT(nes6502_banks[address >> NES6502_BANKSHIFT]);
-
-#ifdef NES6502_MEM_ACCESS_CTRL
    //printf("chk_mem_access(acc_nes6502_banks[%d] + %d, %d)\n", address>>NES6502_BANKSHIFT, address & NES6502_BANKMASK, NES6502_WRITE_ACCESS);
 
    if((address & NES6502_BANKMASK) > max_access[address>>NES6502_BANKSHIFT])
@@ -1282,7 +1249,6 @@ INLINE void bank_writebyte(register uint32 address, register uint8 value)
       max_access[address>>NES6502_BANKSHIFT] = address & NES6502_BANKMASK;
       //printf("max_access[%d] increased to %d\n", address>>NES6502_BANKSHIFT, max_access[address>>NES6502_BANKSHIFT]);
    }
-#endif
 
    chk_mem_access(acc_nes6502_banks[address>>NES6502_BANKSHIFT]
 		  + (address & NES6502_BANKMASK),
@@ -1320,15 +1286,12 @@ INLINE uint32 zp_address(register uint8 address)
 
 INLINE uint32 bank_readaddress(register uint32 address)
 {
-
-#ifdef NES6502_MEM_ACCESS_CTRL
   {
     const unsigned int offset = address & NES6502_BANKMASK;
     uint8 * addr = acc_nes6502_banks[address >> NES6502_BANKSHIFT];
     chk_mem_access(addr+offset+0, NES6502_READ_ACCESS);
     chk_mem_access(addr+offset+1, NES6502_READ_ACCESS);
   }
-#endif
 
 #if defined (HOST_LITTLE_ENDIAN) && defined(HOST_UNALIGN_WORD)
    /* TODO: this fails if src address is $xFFF */
@@ -1414,17 +1377,13 @@ void nes6502_setcontext(nes6502_context *cpu)
    /* Set the page pointers */
    for (loop = 0; loop < NES6502_NUMBANKS; loop++) {
       nes6502_banks[loop] = cpu->mem_page[loop];
-#ifdef NES6502_MEM_ACCESS_CTRL
       acc_nes6502_banks[loop] = cpu->acc_mem_page[loop];
-#endif
    }
 
    ram = nes6502_banks[0];  /* quicker zero-page/RAM references */
    stack_page = ram + STACK_OFFSET;
-#ifdef NES6502_MEM_ACCESS_CTRL
    acc_ram = acc_nes6502_banks[0];  /* quicker zero-page/RAM references */
    acc_stack_page = acc_ram + STACK_OFFSET;
-#endif
 
    pmem_read = cpu->read_handler;
    pmem_write = cpu->write_handler;
@@ -1447,9 +1406,7 @@ void nes6502_getcontext(nes6502_context *cpu)
    /* Set the page pointers */
    for (loop = 0; loop < NES6502_NUMBANKS; loop++) {
       cpu->mem_page[loop] = nes6502_banks[loop];
-#ifdef NES6502_MEM_ACCESS_CTRL
       cpu->acc_mem_page[loop] = acc_nes6502_banks[loop];
-#endif
    }
 
    cpu->read_handler = pmem_read;
@@ -1499,10 +1456,8 @@ int nes6502_execute(int remaining_cycles)
 
    GET_GLOBAL_REGS();
 
-#ifdef NES6502_MEM_ACCESS_CTRL
    /* reset global memory access for this execute loop. */
    nes6502_mem_access = 0;
-#endif   
 
    /* Continue until we run out of cycles */
 
@@ -2537,15 +2492,16 @@ void nes6502_setdma(int cycles)
    dma_cycles += cycles;
 }
 
-#ifdef NES6502_MEM_ACCESS_CTRL
 void nes6502_chk_mem_access(uint8 * access, int flags)
 {
   chk_mem_access(access, flags);
 }
-#endif
 
 /*
 ** $Log: nes6502.c,v $
+** Nosefart 3.2  2023/08/14 19:28     riedler
+** always compile with mem access control
+**
 ** Revision 1.2  2003/05/01 22:34:19  benjihan
 ** New NSF plugin
 **

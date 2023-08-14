@@ -55,12 +55,10 @@
  * The nes6502_mem_access holds all new access (all mode all location). It is 
  * used to determine if the player has loop in playing time calculation.
  */
-#ifdef NES6502_MEM_ACCESS_CTRL
 extern uint8 nes6502_mem_access;
 # define NES6502_READ_ACCESS 1
 # define NES6502_WRITE_ACCESS 2
 # define NES6502_EXE_ACCESS 4
-#endif /* #ifdef NES6502_MEM_ACCESS_CTRL */
 
 /* P (flag) register bitmasks */
 #define  N_FLAG         0x80
@@ -102,9 +100,7 @@ typedef struct
 typedef struct
 {
    uint8 * mem_page[NES6502_NUMBANKS];  /* memory page pointers */
-#ifdef NES6502_MEM_ACCESS_CTRL
-  uint8 * acc_mem_page[NES6502_NUMBANKS]; /* memory access page pointer */
-#endif
+   uint8 * acc_mem_page[NES6502_NUMBANKS]; /* memory access page pointer */
    nes6502_memread *read_handler;
    nes6502_memwrite *write_handler;
    int dma_cycles;
@@ -127,11 +123,7 @@ extern uint8 nes6502_getbyte(uint32 address);
 extern uint32 nes6502_getcycles(boolean reset_flag);
 extern void nes6502_setdma(int cycles);
 
-#ifdef NES6502_MEM_ACCESS_CTRL
 extern void nes6502_chk_mem_access(uint8 * access, int flags);
-#else
-#define nes6502_chk_mem_access(access,flags)
-#endif
 
 /* Context get/set */
 extern void nes6502_setcontext(nes6502_context *cpu);

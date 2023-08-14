@@ -76,9 +76,7 @@ static void nsf_bankswitch(uint32 address, uint8 value)
 
    nes6502_getcontext(cur_nsf->cpu);
    cur_nsf->cpu->mem_page[cpu_page] = offset;
-#ifdef NES6502_MEM_ACCESS_CTRL
    cur_nsf->cpu->acc_mem_page[cpu_page] = offset + cur_nsf->length;
-#endif
    nes6502_setcontext(cur_nsf->cpu);
 }
 
@@ -257,13 +255,10 @@ static void nsf_inittune(nsf_t *nsf)
    memset(nsf->cpu->mem_page[0], 0, 0x800);
    memset(nsf->cpu->mem_page[6], 0, 0x1000);
    memset(nsf->cpu->mem_page[7], 0, 0x1000);
-
-#ifdef NES6502_MEM_ACCESS_CTRL
    memset(nsf->cpu->acc_mem_page[0], 0, 0x800);
    memset(nsf->cpu->acc_mem_page[6], 0, 0x1000);
    memset(nsf->cpu->acc_mem_page[7], 0, 0x1000);
    memset(nsf->data+nsf->length, 0, nsf->length);
-#endif
    nsf->cur_frame = 0;
 /*    nsf->last_access_frame = 0; */
    nsf->cur_frame_end = !nsf->song_frames
@@ -332,7 +327,7 @@ void nsf_frame(nsf_t *nsf)
    nes6502_execute((int) NES_FRAME_CYCLES);
 
    ++nsf->cur_frame;
-#if defined(NES6502_MEM_ACCESS_CTRL) && 0
+#if 0
    if (nes6502_mem_access) {
      uint32 sec =
        (nsf->last_access_frame + nsf->playback_rate - 1) / nsf->playback_rate;
@@ -366,7 +361,6 @@ void nes_shutdown(nsf_t *nsf)
 	}
       }
 
-#ifdef NES6502_MEM_ACCESS_CTRL
       if (nsf->cpu->acc_mem_page[0])
 	{
  	  free(nsf->cpu->acc_mem_page[0]);
@@ -377,7 +371,6 @@ void nes_shutdown(nsf_t *nsf)
 		free(nsf->cpu->acc_mem_page[i]);
 	  }
       }
-#endif
       free(nsf->cpu);
    }
 }
@@ -400,29 +393,18 @@ static int nsf_cpuinit(nsf_t *nsf)
    memset(nsf->cpu, 0, sizeof(nes6502_context));
 
    nsf->cpu->mem_page[0] = malloc(0x800);
-   if (NULL == nsf->cpu->mem_page[0])
+   nsf->cpu->acc_mem_page[0] = malloc(0x800);
+   if (NULL == nsf->cpu->mem_page[0] || NULL == nsf->cpu->acc_mem_page[0])
       return -1;
 
    /* allocate some space for the NSF "player" MMC5 EXRAM, and WRAM */
    for (i = 5; i <= 7; i++)
    {
       nsf->cpu->mem_page[i] = malloc(0x1000);
-      if (NULL == nsf->cpu->mem_page[i])
-         return -1;
-   }
-
-#ifdef NES6502_MEM_ACCESS_CTRL
-   nsf->cpu->acc_mem_page[0] = malloc(0x800);
-   if (NULL == nsf->cpu->acc_mem_page[0])
-      return -1;
-   /* allocate some space for the NSF "player" MMC5 EXRAM, and WRAM */
-   for (i = 5; i <= 7; i++)
-   {
       nsf->cpu->acc_mem_page[i] = malloc(0x1000);
-      if (NULL == nsf->cpu->acc_mem_page[i])
-         return -1;
+      if (NULL == nsf->cpu->mem_page[i] || NULL == nsf->cpu->acc_mem_page[i])
+          return -1;
    }
-#endif
 
    nsf->cpu->read_handler = nsf_readhandler;
    nsf->cpu->write_handler = nsf_writehandler;
@@ -770,10 +752,8 @@ nsf_t * nsf_load_extended(struct nsf_loader_t * loader)
   /* Allocate NSF space, and load it up! */
   {
     int len = temp_nsf->length;
-#ifdef NES6502_MEM_ACCESS_CTRL
     /* $$$ twice memory for access control shadow mem. */
     len <<= 1;
-#endif
    temp_nsf->data = malloc(len);
   }
   if (NULL == temp_nsf->data) {

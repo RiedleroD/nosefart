@@ -29,7 +29,7 @@ CFLAGS +=\
  -I$(BUILDTOP)\
  -I/usr/local/include/
 
-NSFINFO_CFLAGS = $(CFLAGS) -DNES6502_MEM_ACCESS_CTRL
+NSFINFO_CFLAGS = $(CFLAGS)
 
 FILES =\
  log\
