@@ -28,7 +28,6 @@
 
 
 #ifdef __GNUC__
-#define  __PACKED__  __attribute__ ((packed))
 #define  PATH_SEP    '/'
 #endif
 
