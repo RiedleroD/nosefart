@@ -271,7 +271,7 @@ void _my_free(void **data)
    char fail[256];
 
    if (NULL == data || NULL == *data
-       || 0xFFFFFFFF == (uint32) *data || 0xFFFFFFFF == (uint32) data)
+       || (size_t) -1 == (size_t) *data || (size_t) -1 == (size_t) data)
    {
 #ifdef NOFRENDO_DEBUG
       sprintf(fail, "free: attempted to free NULL pointer at line %d of %s\n",
