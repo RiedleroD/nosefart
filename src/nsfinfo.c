@@ -394,29 +394,16 @@ static int read_track_list(char **trackList, int max, int *from, int *to)
   return 1;
 }
 
-int nsf_info_main(int na, char **a)
+int nsf_info_main(const char * iname, int track)
 {
   int i;
-  const char * iname;
   char * buffer = 0;
   int len = 0;
   nsf_t * nsf;
-  int cursong, err, loopArg, toTrack, curTrack;
+  int err, loopArg, toTrack, curTrack;
   char *trackList, *trackListBase;
 
   static unsigned int times[256];
- 
-  /* First loop search for --help, --warranty ,--quiet */
-  for (i=1; i<na; ++i) {
-    if (!strcmp(a[i],"--quiet")) {
-      quiet = 1;
-    }
-  }
-
-  if (na < 2 || !a[1] || !a[1][0]) {
-    return 1;
-  }
-  iname = a[1];
 
   //msg("Loading [%s] file.\n", iname);
   /* Load whole file. */
@@ -474,168 +461,12 @@ int nsf_info_main(int na, char **a)
   //msg("Successfully loaded [%s].\n", iname);
 
   nsf = (nsf_t *)buffer;
-  cursong = nsf->start_song % (nsf->num_songs+1);
   clean_string((char*)nsf->song_name, (char*)nsf->song_name, sizeof(nsf->song_name));
   clean_string((char*)nsf->artist_name, (char*)nsf->artist_name, sizeof(nsf->artist_name));
   clean_string((char*)nsf->copyright, (char*)nsf->copyright, sizeof(nsf->copyright));
   memset(times,0,sizeof(times));
 
-  /* Setup variable */
-  toTrack = curTrack = cursong;
-  trackList = 0;
-
-  for (i=2; i<=na; ++i) {
-    int v, err;
-    char * arg = a[i];
-
-    err = 0;
-    if (i == na || (arg[0] == '-' && arg[1] == '-' && isdigit(arg[2]))) {
-      int res;
-      /* Entering track-list */
-      if (trackList) {
-        /* Already in trackList, finish this one. */
-        if (curTrack < toTrack) {
-          curTrack++;
-          res = 1;
-        } else {
-          res = read_track_list(&trackList, nsf->num_songs,
-				&curTrack , &toTrack);
-        }
-        if (res < 0) {
-	  err = -1;
-	  fprintf(stderr, "nsfinfo : invalid track list [%s]\n",
-		  trackListBase);
-          break;
-        } else if (res > 0) {
-          /* Must loop */
-          i = loopArg;
-          continue;
-        }
-      }
-      if (i==na) {
-        /* All is over capt'n */
-        break;
-      }
-
-      /* Previous list is over, start new one */
-      trackListBase = trackList = arg+2;
-      loopArg = i; /* $$$ or i+1 */
-
-      /* get From track parm */
-      res = read_track_list(&trackList, nsf->num_songs, &curTrack , &toTrack);
-      if (res < 0) {
-	  fprintf(stderr, "nsfinfo : invalid track list [%s]\n",
-		  trackListBase);
-      } else if (!res) {
-        /* This should not happen becoz we check that almost one digit
-	 * was there above */
-        fprintf(stderr, "noseinfo : Internal error;"
-		" program should not reach this point\n");
-        err = -1;
-	break;
-      }
-      /*curTrack = toTrack;*/
-      continue;
-    }
-    cursong = curTrack;
-
-    if (0
-	|| !strcmp(arg,"--help")
-	|| !strcmp(a[i],"--warranty")
-	|| !strcmp(a[i],"--quiet")) {
-      continue;
-    }
-
-    if (!strcmp(arg,"--AT")) {
-      unsigned int nf;
-      //nf = nsf_calc_time(nsf, len, cursong, 0, 1);
-      return nsf_calc_time(nsf, len, cursong, 0, 1);
-     if (nf) {
-	times[cursong] = nf;
-      }
-
-    } else if (!strcmp(arg,"--V")) {
-      /* Print spec version. */
-      printf("%d", nsf->version);
-    } else if (!strcmp(arg,"--B")) {
-      /* Print */
-      printf("%d", nsf->pal_ntsc_bits);
-    } else if (!strcmp(arg,"--F")) {
-      /* Print */
-      printf("%d", nsf_playback_rate(nsf));
-    } else if (err=get_integer(arg,"--B=",&v), !err) {
-      /* Set NTSC/PAL bits  */
-      nsf->pal_ntsc_bits = v;
-    } else if (!strcmp(arg,"--T")) {
-      /* Print number of songs. */
-      printf("%d", nsf->num_songs);
-    } else if (!strcmp(arg,"--t")) {
-      /* Display current song. */
-      printf("%d", cursong);
-    } else if (!strcmp(arg,"--D")) {
-      /* Display default song. */
-      printf("%d", nsf->start_song);
-    } else if (err=get_integer(arg,"--D=",&v), !err) {
-      v = (v == 0) ? cursong : v;
-      if (v > 0 && v <= nsf->num_songs) {
-	nsf->start_song = v;
-      }
-    } else if (!strcmp(arg,"--Tf")
-	       ||!strcmp(arg,"--Ts")
-	       || !strcmp(arg,"--Tx")) {
-      unsigned int time;
-
-      time = times[cursong]
-	? times[cursong]
-	: nsf_calc_time(nsf, len, cursong, 0, 0);
-
-      if (!times[cursong] && time) {
-	times[cursong] = time;
-      }
-
-      if (arg[3] == 'f') {
-	printf("%u",time);
-      } else {
-	unsigned int frame_rate = nsf_playback_rate(nsf);
-	unsigned int sec = (time + frame_rate - 1) / frame_rate;
-	if (arg[3] == 's') {
-	  printf("%u",sec);
-	} else {
-	  printf("%02u:%02u",sec/60u,sec%60u);
-	}
-      }
-    } else if (!strcmp(arg,"--nl")) {
-      fputs("\n",stdout);
-    } else if (!strcmp(arg,"--n")) {
-      fputs((char*)nsf->song_name,stdout);
-    } else if (err = get_string(arg, "--n=",
-				(char*)nsf->song_name,
-				sizeof(nsf->song_name)), !err) {
-      ; /* Nothing more to do. */
-    } else if (!strcmp(arg,"--a")) {
-      fputs((char*)nsf->artist_name,stdout);
-    } else if (err = get_string(arg, "--a=",
-				(char*)nsf->artist_name,
-				sizeof(nsf->artist_name)), !err) {
-      ; /* Nothing more to do. */
-    } else if (!strcmp(arg,"--c")) {
-      fputs((char*)nsf->copyright,stdout);
-    } else if (err = get_string(arg, "--c=",
-				(char*)nsf->copyright,
-				sizeof(nsf->copyright)), !err) {
-      ; /* Nothing more to do. */
-    } else if (strstr(arg,"--p=") == arg) {
-      fputs(arg+4,stdout);
-    } else if (err >= 0) {
-      fputs(arg,stdout);
-    } else {
-      break;
-    }
-
-    if (err<0) {
-      break;
-    }
-  }
+  return nsf_calc_time(nsf, len, track, 0, 1);
   free (buffer);
   return (err < 0) ? 255 : 0;
 }
@@ -650,5 +481,5 @@ unsigned int time_info(char * filename, int track)
 
         char * argv[] = {"nsfinfo", filename, argv1, "--AT"};
 
-        return nsf_info_main(4, argv);
+        return nsf_info_main(filename,track);
 }
