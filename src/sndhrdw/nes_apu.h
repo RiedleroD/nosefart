@@ -275,7 +275,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 /* Function prototypes */
-extern apu_t *apu_create(int sample_rate, int refresh_rate, int sample_bits, boolean stereo);
+extern apu_t *apu_create(int sample_rate, int refresh_rate, int sample_bits);
 extern void apu_destroy(apu_t *apu);
 extern int apu_setext(apu_t *apu, apuext_t *ext);
 extern int apu_setfilter(int filter_type);

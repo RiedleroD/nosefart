@@ -1116,7 +1116,7 @@ static void apu_setactive(apu_t *active)
 }
 
 /* Initializes emulated sound hardware, creates waveforms/voices */
-apu_t *apu_create(int sample_rate, int refresh_rate, int sample_bits, boolean stereo)
+apu_t *apu_create(int sample_rate, int refresh_rate, int sample_bits)
 {
    apu_t *temp_apu;
 /*    int channel; */

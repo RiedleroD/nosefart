@@ -140,7 +140,7 @@ extern nsf_t *nsf_load(const char *filename, void *source, int length);
 extern void nsf_free(nsf_t **nsf_info);
 
 extern int nsf_playtrack(nsf_t *nsf, int track, int sample_rate,
-			 int sample_bits, boolean stereo);
+			 int sample_bits);
 extern void nsf_frame(nsf_t *nsf);
 extern int nsf_setchan(nsf_t *nsf, int chan, boolean enabled);
 extern int nsf_setfilter(nsf_t *nsf, int filter_type);

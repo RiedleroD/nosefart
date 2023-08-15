@@ -193,7 +193,7 @@ static void sync_channels(void) {
 /* start track, display which it is, and what channels are enabled */
 static void nsf_setupsong() {
     printsonginfo(0, 0, 0);
-    nsf_playtrack(nsf, nsf->current_song, freq, bits, 0);
+    nsf_playtrack(nsf, nsf->current_song, freq, bits);
     sync_channels();
 
     return;
@@ -268,7 +268,7 @@ static int nsf_handlekey(char ch, int doautocalc, char *filename, int reps) {
         frames = 0;
         break;
     case '\n':
-        nsf_playtrack(nsf, nsf->current_song, freq, bits, 0);
+        nsf_playtrack(nsf, nsf->current_song, freq, bits);
         sync_channels();
         break;
     case '1':
@@ -401,7 +401,7 @@ static void dump(char* filename, char *dumpname, int track, int reps) {
 
     fwrite(&freq, sizeof(uint32), 1, wavFile);
 
-    uint32 bytesPerSecond = (freq * bits) / 8;
+    uint32 bytesPerSecond = (channels * freq * bits) / 8;
     fwrite(&bytesPerSecond, sizeof(uint32), 1, wavFile);
 
     uint16 blockAlign = (freq / 8);
@@ -413,7 +413,7 @@ static void dump(char* filename, char *dumpname, int track, int reps) {
     fwrite(&size, sizeof(uint32), 1, wavFile);
 
     handle_auto_calc(nsf->current_song, reps);
-    nsf_playtrack(nsf, nsf->current_song, freq, bits, 0);
+    nsf_playtrack(nsf, nsf->current_song, freq, bits);
     sync_channels();
 
     while (!done) {

@@ -909,8 +909,7 @@ int nsf_setchan(nsf_t *nsf, int chan, boolean enabled)
    return apu_setchan(chan, enabled);
 }
 
-int nsf_playtrack(nsf_t *nsf, int track, int sample_rate, int sample_bits,
-		  boolean stereo)
+int nsf_playtrack(nsf_t *nsf, int track, int sample_rate, int sample_bits)
 {
   if (!nsf) {
     return -1;
@@ -924,7 +923,7 @@ int nsf_playtrack(nsf_t *nsf, int track, int sample_rate, int sample_bits,
     apu_destroy(nsf->apu);
   }
 
-  nsf->apu = apu_create(sample_rate, nsf->playback_rate, sample_bits, stereo);
+  nsf->apu = apu_create(sample_rate, nsf->playback_rate, sample_bits);
   if (NULL == nsf->apu)
     {
       /* $$$ ben : from my point of view this is not clean. Function should

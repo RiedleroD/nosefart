@@ -121,7 +121,7 @@ playback_time_t* nsf_calc_time(int track, nsf_t* nsf, unsigned int frame_frag) {
   /* ben : Don't care about sound format here,
    * since it will not be rendered.
    */
-  err = nsf_playtrack(nsf, track, 8000, 8, 1);
+  err = nsf_playtrack(nsf, track, 8000, 8);
   if (err != track) {
     fprintf(stderr,"nsfinfo: track %d not initialized\n", track);
     goto error;
