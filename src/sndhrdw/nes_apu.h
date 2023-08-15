@@ -284,6 +284,7 @@ extern void apu_reset(void);
 extern int apu_setchan(int chan, boolean enabled);
 extern int32 apu_getcyclerate(void);
 extern apu_t *apu_getcontext(void);
+extern void apu_setcontext(apu_t *src_apu);
 
 extern uint8 apu_read(uint32 address);
 extern void apu_write(uint32 address, uint8 value);
