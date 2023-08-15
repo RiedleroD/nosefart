@@ -380,41 +380,29 @@ static void dump(char* filename, char *dumpname, int track, int reps) {
     int done = 0;
     frames = 0;
     bufferPos = buffer;
-
-    FILE *wavFile = fopen(dumpname, "wb");
-
-    fwrite("RIFF", 4, 1, wavFile);
-
     uint32 size = 0;
-    fwrite(&size, sizeof(uint32), 1, wavFile);
 
-    fwrite("WAVEfmt ", 8, 1, wavFile);
-
-    uint32 headerSize = 16;
-    fwrite(&headerSize, sizeof(uint32), 1, wavFile);
-
-    uint16 type = 1;
-    fwrite(&type, sizeof(uint16), 1, wavFile);
-
-    uint16 channels = 1;
-    fwrite(&channels, sizeof(uint16), 1, wavFile);
-
-    fwrite(&freq, sizeof(uint32), 1, wavFile);
-
-    uint32 bytesPerSecond = (channels * freq * bits) / 8;
-    fwrite(&bytesPerSecond, sizeof(uint32), 1, wavFile);
-
-    uint16 blockAlign = (freq / 8);
-    fwrite(&blockAlign, sizeof(uint16), 1, wavFile);
-
-    fwrite(&bits, sizeof(uint16), 1, wavFile);
-
-    fwrite("data", 4, 1, wavFile);
-    fwrite(&size, sizeof(uint32), 1, wavFile);
+    typedef struct wav_header_s {
+        uint8  containerstr[4];
+        uint32 filesize;
+        uint8  formatstr[8];
+        uint32 fmtsize;
+        uint16 audiofmt;
+        uint16 channels;
+        uint32 samprate;
+        uint32 byterate;
+        uint16 blockalign;
+        uint16 bitspersample;
+        uint8  datastr[4];
+        uint32 datasize;
+    } wav_header_t;
 
     handle_auto_calc(nsf->current_song, reps);
     nsf_playtrack(nsf, nsf->current_song, freq, bits);
     sync_channels();
+
+    FILE *wavFile = fopen(dumpname, "wb");
+    fseek(wavFile, sizeof(wav_header_t), SEEK_SET);
 
     while (!done) {
         nsf_frame(nsf);
@@ -433,13 +421,27 @@ static void dump(char* filename, char *dumpname, int track, int reps) {
         }
     }
 
-    fseek(wavFile, 40, SEEK_SET);
-    fwrite(&size, sizeof(uint32), 1, wavFile);
+    wav_header_t wav_header = {
+        .containerstr = "RIFF",
+        .filesize =
+            size
+            + sizeof(wav_header)
+            - sizeof(wav_header.containerstr)
+            - sizeof(wav_header.filesize),
+        .formatstr = "WAVEfmt ",
+        .fmtsize = 16,
+        .audiofmt = 1, // PCM
+        .channels = 1,
+        .samprate = freq,
+        .byterate = (freq * bits * 1) / 8,
+        .blockalign = (bits * 1) / 8,
+        .bitspersample = bits,
+        .datastr = "data",
+        .datasize = size,
+    };
 
-    fseek(wavFile, 4, SEEK_SET);
-    size += 36;
-    fwrite(&size, sizeof(uint32), 1, wavFile);
-
+    fseek(wavFile, 0, SEEK_SET);
+    fwrite(&wav_header, sizeof(wav_header), 1, wavFile);
     fclose(wavFile);
 }
 
