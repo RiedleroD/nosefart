@@ -225,16 +225,14 @@ static void nsf_displaysonglengths(char *filename) {
     printf("Approximated Song Lengths:\n");
     printf("intro frames / seconds | loop frames / seconds\n");
 
-    int inforesult, intro_frames, loop_frames;
-    double intro_seconds, loop_seconds;
     for (int i = 1; i <= nsf->num_songs; i++) {
-        inforesult = time_info(filename, i);
+        const int inforesult = time_info(filename, i);
 
-        loop_frames = inforesult % 0x1000;
-        intro_frames = (inforesult / 0x1000) - loop_frames;
+        const int loop_frames = inforesult % 0x1000;
+        const int intro_frames = (inforesult / 0x1000) - loop_frames;
 
-        loop_seconds = (double)loop_frames / nsf->playback_rate;
-        intro_seconds = (double)intro_frames / nsf->playback_rate;
+        const double loop_seconds = (double)loop_frames / nsf->playback_rate;
+        const double intro_seconds = (double)intro_frames / nsf->playback_rate;
 
         printf("%12d %9.2f | %11d %9.2f\n", intro_frames, intro_seconds,
                loop_frames, loop_seconds);

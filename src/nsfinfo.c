@@ -266,7 +266,7 @@ static unsigned int nsf_calc_time(nsf_t * src,
       }
     }
     result2 = last_accessed_frame - starting_frame + 16 /* fudge room */;
-    sec = (float)(result2 + nsf->playback_rate - 1) / (float)nsf->playback_rate;
+    //sec = (float)(result2 + nsf->playback_rate - 1) / (float)nsf->playback_rate;
     //printf("track %d without intro is %u frames, %.2f seconds\n",
 //	track, result2, sec);
   }
@@ -395,12 +395,9 @@ static int read_track_list(char **trackList, int max, int *from, int *to)
 }
 
 int time_info(const char * iname, int track) {
-  int i;
   char * buffer = 0;
   int len = 0;
   nsf_t * nsf;
-  int err, loopArg, toTrack, curTrack;
-  char *trackList, *trackListBase;
 
   static unsigned int times[256];
 
@@ -423,9 +420,8 @@ int time_info(const char * iname, int track) {
         fprintf(stderr, "nsfinfo : %s not an nsf file (too small).\n", iname);
       } else {
 	char tmp_hd[128];
-	int err;
 	//msg("File length is %d bytes.\n", len);
-	err = fseek(f,0,SEEK_SET);
+	int err = fseek(f,0,SEEK_SET);
 	if (err != -1) {
 	  err = fread(tmp_hd, 1, 128, f);
 	}
@@ -440,7 +436,6 @@ int time_info(const char * iname, int track) {
 	  if (!buffer) {
 	    perror(iname);
 	  } else {
-	    int err;
 	    memcpy(buffer, tmp_hd, 128);
 	    err = fread(buffer+128, 1, len-128, f);
 	    if (err != len-128) {
