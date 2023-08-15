@@ -61,63 +61,6 @@ static int quiet = 0;
 extern uint8 *acc_nes6502_banks[NES6502_NUMBANKS];
 extern int max_access[NES6502_NUMBANKS];
 
-static void info_show_help(void)
-{
-   printf("\n"
-	  "nsfinfo : get and set NSF (NES Sound File) information.\n"
-	  "\n"
-	  "by Benjamin Gerard (2003/04/18)\n"
-	  "\n"
-	  "Usage: `nsfinfo nsf-file [COMMAND | OPTION ...]'\n"
-	  "\n"
-	  "OPTION:\n"
-	  " --help     : Display this message and exit\n"
-	  " --warranty : Display warranty message and exit\n"
-	  " --quiet    : Remove all messages\n"
-	  "\n"
-	  "COMMANDS:\n"
-	  " track-list : Set track list for following commands\n"
-	  " --V        : Display format spec version\n"
-	  " --F        : Display playback rate in Hz\n"
-	  " --B        : Display PAL/NTSC bits\n"
-	  " --B=#      : Set PAL/NTSC bits\n"
-	  " --T        : Display number of song\n"
-	  " --t        : Display current song\n"
-	  " --D        : Display default song\n"
-	  " --D=#      : Set default song [0=current]\n"
-	  " --n        : Display song name\n"
-	  " --n=xxx    : Set song name\n"
-	  " --a        : Display artist\n"
-	  " --a=xxx    : Set artist\n"
-	  " --c        : Display copyright\n"
-	  " --c=xxx    : Set copyright\n"
-	  " --w[=file] : Write NSF file (default is input file)\n"
-	  " --nl       : Display a newline char.\n"
-	  " --p=STRING : Display STRING.\n"
-	  " --Tf       : Display current track time (in frames)\n"
-	  " --Ts       : Display current track time (in seconds)\n"
-	  " --Tx       : Display current track time (formatted)\n"
-	  " --AT       : Launch auto time calculation.\n"
-	  " STRING     : Display STRING.\n"
-	  "\n"
-	  "track-list  : --track[[,track]|[-track]]\n"
-	  "\n"
-	  "  track-list executes following commands for all listed tracks\n"
-	  "  until another track-list or end of commands is reached.\n"
-	  "  First track is number 1. 0 is replaced by the number of tracks.\n"
-	  "\n"
-	  "e.g:\n"
-	  "\n"
-	  " `nsfinfo file.nsf --1,5,4-6 track: --t ' ' frames: --Tf --nl'\n"
-	  "\n"
-	  " Works with tracks 1,5,4,5 and 6 in this order and will\n"
-	  " display `track:1 frames:2342' for all theses tracks.\n"
-	  "\n"
-	  "  `--1-0' loops over all tracks.\n" 
-	  "\n"
-	  );
-}
-
 static void msg(const char *fmt, ...)
 {
   va_list list;
@@ -127,15 +70,6 @@ static void msg(const char *fmt, ...)
   va_start(list, fmt);
   vfprintf(stderr, fmt, list);
   va_end(list);
-}
-
-static void info_show_warranty(void)
-{
-  printf("\n"
-	 "This software comes with absolutely no warranty. "
-	 "You may redistribute this\nprogram under the terms of the GPL. "
-	 "(See the file COPYING in the source tree.)\n\n"
-	 );
 }
 
 static void lpoke(uint8 *p, int v)
@@ -556,21 +490,12 @@ int nsf_info_main(int na, char **a)
  
   /* First loop search for --help, --warranty ,--quiet */
   for (i=1; i<na; ++i) {
-    if (!strcmp(a[i],"--help")) {
-      info_show_help();
-      return 1;
-    }
-    if (!strcmp(a[i],"--warranty")) {
-      info_show_warranty();
-      return 1;
-    }
     if (!strcmp(a[i],"--quiet")) {
       quiet = 1;
     }
   }
 
   if (na < 2 || !a[1] || !a[1][0]) {
-    info_show_help();
     return 1;
   }
   iname = a[1];
