@@ -374,7 +374,7 @@ static void play(char *filename, int track, int doautocalc, int reps,
     fprintf(stderr, "\n");
 }
 
-static void dump(char* filename, char *dumpname, int track) {
+static void dump(char* filename, char *dumpname, int track, int reps) {
     memset(buffer, 0, bufferSize);
 
     int done = 0;
@@ -412,7 +412,7 @@ static void dump(char* filename, char *dumpname, int track) {
     fwrite("data", 4, 1, wavFile);
     fwrite(&size, sizeof(uint32), 1, wavFile);
 
-    handle_auto_calc(nsf->current_song, 1);
+    handle_auto_calc(nsf->current_song, reps);
     nsf_playtrack(nsf, nsf->current_song, freq, bits, 0);
     sync_channels();
 
@@ -568,7 +568,7 @@ int main(int argc, char **argv) {
             char* dumpname = malloc(strlen(dumpwavdir) + 9);
             sprintf(dumpname, "%s/%d.wav", dumpwavdir, nsf->current_song);
 
-            dump(filename, dumpname, i);
+            dump(filename, dumpname, i, reps);
 
             free(dumpname);
         }
