@@ -103,8 +103,8 @@ static int nsf_inited = 0;
 static unsigned int nsf_calc_time(nsf_t * src,
   int len,  int track,  unsigned int frame_frag, int force)
 {
-  unsigned int result1 = 0, result2 = 0;
-  nsf_t * nsf = 0;
+  unsigned int full_time, introless_time;
+  nsf_t * nsf = NULL;
   float sec; 
   unsigned int playback_rate = nsf_playback_rate(src);
   int err;
@@ -131,13 +131,13 @@ static unsigned int nsf_calc_time(nsf_t * src,
   }
 
   //msg("nsfinfo : loading nsf...\n");
-  nsf = nsf_load(0, src, len);
+  nsf = nsf_load(NULL, src, len);
   if (!nsf) {
     fprintf(stderr,"nsfinfo: load failed\n");
     goto error;
   }
   if (!force && nsf->song_frames && nsf->song_frames[track]) {
-    result1 = nsf->song_frames[track];
+    full_time = nsf->song_frames[track];
     goto error; /* Not en error :) */
   }
 
@@ -149,7 +149,7 @@ static unsigned int nsf_calc_time(nsf_t * src,
   if (err != track) {
     if (err == -1) {
       /* $$$ ben : Becoz nsf_playtrack() kicks nsf ass :( */
-      nsf = 0;
+      nsf = NULL;
     }
     fprintf(stderr,"nsfinfo: track %d not initialized\n", track);
     goto error;
@@ -201,10 +201,10 @@ static unsigned int nsf_calc_time(nsf_t * src,
 	  done = 1;
       }
     }
-    result1 = last_accessed_frame + 16 /* fudge room */;
-    sec = (float)(result1 + nsf->playback_rate - 1) / (float)nsf->playback_rate;
+    full_time = last_accessed_frame + 16 /* fudge room */;
+    sec = (float)(full_time + nsf->playback_rate - 1) / (float)nsf->playback_rate;
     //printf("track %d with intro is %u frames, %.2f seconds\n",
-	//track, result1, sec);
+	//track, full_time, sec);
 
     // doesn't make a difference
     //nsf->cur_frame = last_accessed_frame;
@@ -265,17 +265,17 @@ static unsigned int nsf_calc_time(nsf_t * src,
 	  done = 1;
       }
     }
-    result2 = last_accessed_frame - starting_frame + 16 /* fudge room */;
-    //sec = (float)(result2 + nsf->playback_rate - 1) / (float)nsf->playback_rate;
+    introless_time = last_accessed_frame - starting_frame + 16 /* fudge room */;
+    //sec = (float)(introless_time + nsf->playback_rate - 1) / (float)nsf->playback_rate;
     //printf("track %d without intro is %u frames, %.2f seconds\n",
-//	track, result2, sec);
+//	track, introless_time, sec);
   }
 
   /* Want to get both results back to nosefart.  Neither should be 
      larger than 2^16, so let's shove them together into one int.
-     the high order bits are result1 (with intro) and the lower order
-     bits are result2 (without intro) */
-	return (result1 * 0x1000 + result2);
+     the high order bits are full_time and the lower order
+     bits are introless_time */
+	return (full_time * 0x1000 + introless_time);
 
  error:
   nsf_free(&nsf);
