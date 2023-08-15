@@ -80,88 +80,6 @@ static void lpoke(uint8 *p, int v)
   p[3] = v >> 24;
 }
 
-static int nsf_write_file(const char * fname,
-			  const nsf_t * header,
-			  const char * buffer, int len,
-			  unsigned int * timeinfo)
-{
-  int err = -1;
-  FILE *f;
-  nsf_t nsf;
-  int i, songs;
-  unsigned int total_time;
-
-  msg("Creating nsf version 2 [%s]\n", fname);
-  f = fopen(fname,"wb");
-  if (!f) {
-    perror(fname);
-    goto error;
-  }
-
-  /* Copy header. */
-  memcpy(&nsf, header, 128);
-  /* Set new version. */
-  nsf.version = 2;
-  /* Set data length (24 bit). */
-  lpoke(nsf.reserved, len & 0xFFFFFF);
-
-  /* Write header. */
-  msg(" - Write header\n");
-  if (fwrite(&nsf, 1, 128, f) != 128) {
-    perror(fname);
-    goto error;
-  }
-
-  /* Write music data. */
-  msg(" - Write data\n");
-  if (fwrite(buffer, 1, len, f) != len) {
-    perror(fname);
-    goto error;
-  }
-
-  /* Check for time info */
-  songs = nsf.num_songs;
-  total_time = 0;
-  if (timeinfo) {
-    for (i=1; i<=songs; ++i) {
-      total_time += timeinfo[i];
-    }
-    timeinfo[0] = total_time;
-  }
-
-  /* Write time info. */
-  if (!total_time) {
-    msg(" - No time info\n");
-  } else {
-    static const char * id = "NESMTIME";
-    unsigned char word[4];
-
-    /* Compute NESMTIME chunk size. */
-    msg(" - Write TIME chunk header (%d songs)\n", songs);
-    lpoke(word, 8 + 4 + 4 * (songs+1));
-    if (fwrite(id, 1, 8, f) != 8 || fwrite(word, 1, 4, f) != 4) {
-      perror(fname);
-      goto error;
-    }
-
-    for (i=0; i <= songs; ++i) {
-      msg(" - Write TIME info #%02d [%u frames]\n", i, timeinfo[i]);
-      lpoke(word, timeinfo[i]);
-      if (fwrite(word, 1, 4, f) != 4) {
-	perror(fname);
-	goto error;
-      }
-    }
-  }
-
-  err = 0;
- error:
-  if (f) {
-    fclose(f);
-  }
-  return err;
-}
-
 
 static int nsf_playback_rate(nsf_t * nsf)
 {
@@ -706,10 +624,6 @@ int nsf_info_main(int na, char **a)
 				(char*)nsf->copyright,
 				sizeof(nsf->copyright)), !err) {
       ; /* Nothing more to do. */
-    } else if (!strcmp(arg,"--w") || strstr(arg,"--w=") == arg) {
-      const char * oname = iname;
-      oname = !strcmp(arg,"--w") ? iname : arg + 4;
-      err = nsf_write_file(oname, nsf, buffer+128, len-128, times);
     } else if (strstr(arg,"--p=") == arg) {
       fputs(arg+4,stdout);
     } else if (err >= 0) {
