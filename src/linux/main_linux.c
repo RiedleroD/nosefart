@@ -40,20 +40,16 @@ static int pid = 1; /* something non-zero by default */
 
 /* takes the number of repetitions desired and returns the number of frames
 to play */
-static int get_time(int repetitions, char *filename, int track) {
-    /* raw result, with intro, without intro */
-    int result, wintro, wointro;
+static int get_time(int repetitions, int track) {
+    playback_time_t* result = nsf_calc_time(track, nsf, 0);
+    if(result == NULL)
+        return -1;
 
-    result = time_info(filename, track);
-
-    wintro = result / 0x1000;
-    wointro = result % 0x1000;
-
-    return wintro + (repetitions - 1) * wointro;
+    return result->intro_frames + repetitions * result->loop_frames;
 }
 
-void handle_auto_calc(char *filename, int track, int reps) {
-    *plimit_frames = get_time(reps, filename, track);
+void handle_auto_calc(int track, int reps) {
+    *plimit_frames = get_time(reps, track);
 }
 
 static void init_sdl(void) {
@@ -226,16 +222,10 @@ static void nsf_displaysonglengths(char *filename) {
     printf("intro frames / seconds | loop frames / seconds\n");
 
     for (int i = 1; i <= nsf->num_songs; i++) {
-        const int inforesult = time_info(filename, i);
+        playback_time_t* times = nsf_calc_time(i, nsf, 0);
 
-        const int loop_frames = inforesult % 0x1000;
-        const int intro_frames = (inforesult / 0x1000) - loop_frames;
-
-        const double loop_seconds = (double)loop_frames / nsf->playback_rate;
-        const double intro_seconds = (double)intro_frames / nsf->playback_rate;
-
-        printf("%12d %9.2f | %11d %9.2f\n", intro_frames, intro_seconds,
-               loop_frames, loop_seconds);
+        printf("%12d %9.2f | %11d %9.2f\n", times->intro_frames, times->intro_seconds,
+               times->loop_frames, times->loop_seconds);
     }
 
     fflush(stdout);
@@ -255,12 +245,12 @@ static int nsf_handlekey(char ch, int doautocalc, char *filename, int reps) {
             nsf->current_song++;
         }
 
+        if (doautocalc) {
+            handle_auto_calc(nsf->current_song, reps);
+        }
+
         nsf_setupsong();
         frames = 0;
-
-        if (doautocalc) {
-            handle_auto_calc(filename, nsf->current_song, reps);
-        }
 
         break;
     case 'z':
@@ -270,12 +260,12 @@ static int nsf_handlekey(char ch, int doautocalc, char *filename, int reps) {
             nsf->current_song--;
         }
 
+        if (doautocalc) {
+            handle_auto_calc(nsf->current_song, reps);
+        }
+
         nsf_setupsong();
         frames = 0;
-
-        if (doautocalc) {
-            handle_auto_calc(filename, nsf->current_song, reps);
-        }
         break;
     case '\n':
         nsf_playtrack(nsf, nsf->current_song, freq, bits, 0);
@@ -422,7 +412,7 @@ static void dump(char* filename, char *dumpname, int track) {
     fwrite("data", 4, 1, wavFile);
     fwrite(&size, sizeof(uint32), 1, wavFile);
 
-    handle_auto_calc(filename, nsf->current_song, 1);
+    handle_auto_calc(nsf->current_song, 1);
     nsf_playtrack(nsf, nsf->current_song, freq, bits, 0);
     sync_channels();
 
@@ -456,7 +446,7 @@ static void dump(char* filename, char *dumpname, int track) {
 /* free what we've allocated */
 static void close_nsf_file(void) {
     nsf_free(&nsf);
-    nsf = 0;
+    nsf = NULL;
 }
 
 int main(int argc, char **argv) {
@@ -550,14 +540,14 @@ int main(int argc, char **argv) {
     filename = malloc(strlen(argv[optind]) + 1);
     strcpy(filename, argv[optind]);
 
+    load_nsf_file(filename);
+
     if (doautocalc) {
         printf("Using song length calculation. Note that this isn't perfectly "
                "accurate.\n\n");
 
-        handle_auto_calc(filename, track, reps);
+        handle_auto_calc(track, reps);
     }
-
-    load_nsf_file(filename);
 
     nsf->playback_rate *= speed_multiplier;
 

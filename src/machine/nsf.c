@@ -305,22 +305,6 @@ static void nsf_inittune(nsf_t *nsf)
 
 void nsf_frame(nsf_t *nsf)
 {
-    // This is how Matthew Conte left it
-    //nsf_setcontext(nsf); /* future expansion =) */
-
-    // This was suggested by Arne Morten Kvarving, who says:
-/*	Also, I fixed a bug that prevented Nosefart to play multiple tunes at
-	one time (actually it was just a few missing setcontext calls in the
-	playback routine, it had a nice TODO commented beside it. You had to set
-	the cpu and apu contexts not just the nsf context).
-
-	it will affect any player that tries to use nosefart to play more than one
-	tune at a time.
-*/
-    nsf_setcontext(nsf);
-    apu_setcontext(nsf->apu);
-    nes6502_setcontext(nsf->cpu);
-
    /* one frame of NES processing */
    nsf_setup_routine(nsf->play_addr, 0, 0);
    nes6502_execute((int) NES_FRAME_CYCLES);

@@ -44,6 +44,8 @@
 #include "nsf.h"
 #include "config.h"
 
+#include "nsfinfo.h"
+
 static int quiet = 0;
 
 #ifdef NSF_PLAYER
@@ -98,48 +100,22 @@ static int nsf_playback_rate(nsf_t * nsf)
   return v ? 1000000 / v : def;
 }
 
-static int nsf_inited = 0;
-
-static unsigned int nsf_calc_time(nsf_t * src,
-  int len,  int track,  unsigned int frame_frag, int force)
-{
-  unsigned int full_time, introless_time;
-  nsf_t * nsf = NULL;
-  float sec; 
-  unsigned int playback_rate = nsf_playback_rate(src);
+playback_time_t* nsf_calc_time(int track, nsf_t* nsf, unsigned int frame_frag) {
+  playback_time_t* times = malloc(sizeof(playback_time_t));
+  uint32 frametimes[2];
+  unsigned int playback_rate = nsf_playback_rate(nsf);
   int err;
   unsigned int max_frag;
 
   // trouble with zelda2:7?
-  int default_frag_size = 20 * playback_rate; // 2 * 60 * playback_rate; 
+  int default_frag_size = 20 * playback_rate; // 2 * 60 * playback_rate;
 
-  if (track < 0 || track > src->num_songs) {
+  if (track < 0 || track > nsf->num_songs) {
     fprintf(stderr, "nsfinfo : calc time, track #%d out of range.\n", track);
   }
   /* always called with frame_frag == 0 --matt s. */
   frame_frag = frame_frag ? frame_frag : default_frag_size;
   max_frag = 60 * 60 * playback_rate;
-
-  if (!nsf_inited) {
-    //msg("nsfinfo : init nosefart engine...\n");
-    if (nsf_init() == -1) {
-      fprintf(stderr, "nsfinfo :  init failed.\n");
-      goto error;
-    }
-    nsf_inited = 1;
-    //msg("nsfinfo : nosefart engine initialized\n");
-  }
-
-  //msg("nsfinfo : loading nsf...\n");
-  nsf = nsf_load(NULL, src, len);
-  if (!nsf) {
-    fprintf(stderr,"nsfinfo: load failed\n");
-    goto error;
-  }
-  if (!force && nsf->song_frames && nsf->song_frames[track]) {
-    full_time = nsf->song_frames[track];
-    goto error; /* Not en error :) */
-  }
 
   //msg("nsfinfo : init [%s] #%d...\n", nsf->song_name, track);
   /* ben : Don't care about sound format here,
@@ -147,10 +123,6 @@ static unsigned int nsf_calc_time(nsf_t * src,
    */
   err = nsf_playtrack(nsf, track, 8000, 8, 1);
   if (err != track) {
-    if (err == -1) {
-      /* $$$ ben : Becoz nsf_playtrack() kicks nsf ass :( */
-      nsf = NULL;
-    }
     fprintf(stderr,"nsfinfo: track %d not initialized\n", track);
     goto error;
   }
@@ -163,124 +135,78 @@ static unsigned int nsf_calc_time(nsf_t * src,
      length of A B C.  I don't think I've encountered this, however, 
      although I think it could happen.)
      -matt s. 
+     I've merged ben's second run into this loop to deduplicate code.
+     So after matt's original stuff, it goes into a second round where it does
+     essentially the same, but doesn't reset the position, so it only measures
+     from the start of a loop to the end of it
+     -riedler
   */
-  {
-    int done = 0;
-    uint32 last_accessed_frame = 0, prev_frag = 0, starting_frame = 0;
+  uint8 round = 0;
+  uint32 last_accessed_frame = 0, prev_frag = 0, starting_frame = 0;
 
-    //msg("nsfinfo : Emulating up to %u frames (%d hz)\n", frame_frag, playback_rate);
+  //msg("nsfinfo : Emulating up to %u frames (%d hz)\n", frame_frag, playback_rate);
 
-    while (!done) 
-    {
-      nsf_frame(nsf); /* advance one frame. -matt s. */
+  while (round < 2) {
+    nsf_frame(nsf); /* advance one frame. -matt s. */
 
-      //msg("%d ", nsf->cur_frame);
-      if (nes6502_mem_access)
-      {
+    //msg("%d ", nsf->cur_frame);
+    if (nes6502_mem_access) {
         //msg("!");
-	last_accessed_frame = nsf->cur_frame;
-      }
-      //msg("\n");
-
-      if (nsf->cur_frame > frame_frag) 
-      {
-        if (last_accessed_frame > prev_frag) 
-        {
-	  prev_frag = nsf->cur_frame;
-	  frame_frag += default_frag_size;
-	  //msg("nsfinfo : memory was accessed, enlarging search to next %u frames\n",
-	  //    default_frag_size);
-	  
-          if (frame_frag >= max_frag) 
-          {
-	    msg("\nnsfinfo : unable to find end of music within %u frames, giving up!\n", max_frag);
-	    goto error;
-	  }
-	} 
-        else 
-	  done = 1;
-      }
+        last_accessed_frame = nsf->cur_frame;
     }
-    full_time = last_accessed_frame + 16 /* fudge room */;
-    sec = (float)(full_time + nsf->playback_rate - 1) / (float)nsf->playback_rate;
-    //printf("track %d with intro is %u frames, %.2f seconds\n",
-	//track, full_time, sec);
+    //msg("\r");
 
-    // doesn't make a difference
-    //nsf->cur_frame = last_accessed_frame;
-  }
+    if (nsf->cur_frame > frame_frag) {
+      if (last_accessed_frame > prev_frag) {
+        //msg("nsfinfo : memory was accessed, enlarging search to next %u frames\n",
+        //    default_frag_size);
 
-  /* clear out the memory access information.  This is a kludge
-     because I, matt s, don't totally understand what ben is doing! 
-     max_access information is collected in src/cpu/nes6502/nes6502.c */
-  {
-    int a;
-    for(a = 0; a < NES6502_NUMBANKS; a++)
-    {
-	//msg("max_access[%d] = %d\n", a, max_access[a]);
-  	memset(acc_nes6502_banks[a], 0, max_access[a]);
+        if (frame_frag >= max_frag) {
+          msg("\nnsfinfo : unable to find end of music within %u frames, giving up!\n", max_frag);
+          goto error;
+        }
+      } else {
+        frametimes[round] = last_accessed_frame - starting_frame;
+
+        //printf("track %d round %d is %u frames, %.2f seconds\n",
+        //  track, round, frames, sec);
+
+        for(int a = 0; a < NES6502_NUMBANKS; a++) {
+          //msg("max_access[%d] = %d\n", a, max_access[a]);
+          memset(acc_nes6502_banks[a], 0, max_access[a]);
+          max_access[a] = 0;
+        }
+        //msg("starting next round\n");
+        round++;
+        starting_frame = nsf->cur_frame;
+      }
+      prev_frag = nsf->cur_frame;
+      frame_frag += default_frag_size;
     }
   }
 
-  //msg("starting second run\n");
+  times->loop_frames = frametimes[1];
+  times->intro_frames = frametimes[0] - times->loop_frames;
 
-  /* This finds the length of the song _without_ the intro. -matt s */
-  {
-    /* don't want to count what we've already looked at */
-    int starting_frame = nsf->cur_frame; 
-
-    int done = 0;
-    uint32 last_accessed_frame = 0, prev_frag = 0;
-
-    //msg("nsfinfo : Emulating up to %u frames (%d hz)\n", frame_frag, playback_rate);
-
-    while (!done) 
-    {
-      nsf_frame(nsf); /* advance one frame. -matt s. */
-
-      //msg("%d ", nsf->cur_frame - starting_frame);
-      if (nes6502_mem_access)
-      {
-        //msg("!");
-	last_accessed_frame = nsf->cur_frame;
-      }
-      //msg("\n");
-
-      if (nsf->cur_frame > frame_frag) 
-      {
-        if (last_accessed_frame > prev_frag) 
-        {
-	  prev_frag = nsf->cur_frame;
-	  frame_frag += default_frag_size;
-	  //msg("nsfinfo : memory was accessed, enlarging search to next %u frames\n",
-	  //    default_frag_size);
-	  
-          if (frame_frag >= max_frag) 
-          {
-	    msg("\nnsfinfo : unable to find end of music within %u frames\n\tgiving up!", max_frag);
-	    goto error;
-	  }
-	} 
-        else 
-	  done = 1;
-      }
-    }
-    introless_time = last_accessed_frame - starting_frame + 16 /* fudge room */;
-    //sec = (float)(introless_time + nsf->playback_rate - 1) / (float)nsf->playback_rate;
-    //printf("track %d without intro is %u frames, %.2f seconds\n",
-//	track, introless_time, sec);
+  //heuristics go brr
+  if (times->loop_frames < 2) {
+    times->loop_frames = 0;
+  }
+  if (times->intro_frames < 2) {
+    times->intro_frames = 0;
+  } else {
+    times->intro_frames += playback_rate / 2;
   }
 
-  /* Want to get both results back to nosefart.  Neither should be 
-     larger than 2^16, so let's shove them together into one int.
-     the high order bits are full_time and the lower order
-     bits are introless_time */
-	return (full_time * 0x1000 + introless_time);
+  times->intro_seconds = (double)(times->intro_frames) / nsf->playback_rate;
+  times->loop_seconds = (double)(times->loop_frames) / nsf->playback_rate;
+
+  return times;
 
  error:
   nsf_free(&nsf);
   fprintf(stderr, "Error with time calculation, bailing out!\n");
-  return 0x00000001; /* something small, but non-zero (zero means unlimited) */
+  return NULL;
 }
 
 
@@ -392,73 +318,4 @@ static int read_track_list(char **trackList, int max, int *from, int *to)
 /*   msg("from:%d, to:%d [%s]\n", fromTrack, toTrack, *trackList); */
 
   return 1;
-}
-
-int time_info(const char * iname, int track) {
-  char * buffer = 0;
-  int len = 0;
-  nsf_t * nsf;
-
-  static unsigned int times[256];
-
-  //msg("Loading [%s] file.\n", iname);
-  /* Load whole file. */
-  {
-    FILE * f = fopen(iname, "rb");
-    if (!f) {
-      perror(iname);
-      return 2;
-    }
-
-    if (fseek(f,0,SEEK_END) == -1) {
-      perror(iname);
-    } else {
-      len = ftell(f);
-      if (len == -1) {
-        perror(iname);
-      } else if (len < 128) {
-        fprintf(stderr, "nsfinfo : %s not an nsf file (too small).\n", iname);
-      } else {
-	char tmp_hd[128];
-	//msg("File length is %d bytes.\n", len);
-	int err = fseek(f,0,SEEK_SET);
-	if (err != -1) {
-	  err = fread(tmp_hd, 1, 128, f);
-	}
-	if (err != 128) {
-	  perror(iname);
-	} else if (memcmp(tmp_hd,NSF_MAGIC,5)) {
-	  fprintf(stderr, "nsfinfo : %s not an nsf file (invalid magic).\n",
-		  iname);
-	} else {
-	  //msg("Looks like a valid NSF file, loading data ...\n");
-	  buffer = malloc(len);
-	  if (!buffer) {
-	    perror(iname);
-	  } else {
-	    memcpy(buffer, tmp_hd, 128);
-	    err = fread(buffer+128, 1, len-128, f);
-	    if (err != len-128) {
-	      perror(iname);
-	      free(buffer);
-	      buffer = 0;
-	    }
-	  }
-	}
-      }
-    }
-    fclose(f);
-  }
-  if (!buffer) {
-    return 3;
-  }
-  //msg("Successfully loaded [%s].\n", iname);
-
-  nsf = (nsf_t *)buffer;
-  clean_string((char*)nsf->song_name, (char*)nsf->song_name, sizeof(nsf->song_name));
-  clean_string((char*)nsf->artist_name, (char*)nsf->artist_name, sizeof(nsf->artist_name));
-  clean_string((char*)nsf->copyright, (char*)nsf->copyright, sizeof(nsf->copyright));
-  memset(times,0,sizeof(times));
-
-  return nsf_calc_time(nsf, len, track, 0, 1);
 }

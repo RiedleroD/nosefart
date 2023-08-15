@@ -22,5 +22,14 @@ time (in frames) of the track with its intro in the first 2 bytes and
 the time without intro in the last 2 bytes. It's mostly accurate and
 pretty fast. */
 
-unsigned int time_info(char * filename, int track);
+#include "nsf.h"
+
+typedef struct playback_time_s{
+	uint32 intro_frames;
+	uint32 loop_frames;
+	double intro_seconds;
+	double loop_seconds;
+} playback_time_t;
+
+playback_time_t* nsf_calc_time(int track, nsf_t* nsf, unsigned int frame_frag);
 
