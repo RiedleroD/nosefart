@@ -394,8 +394,7 @@ static int read_track_list(char **trackList, int max, int *from, int *to)
   return 1;
 }
 
-int nsf_info_main(const char * iname, int track)
-{
+int time_info(const char * iname, int track) {
   int i;
   char * buffer = 0;
   int len = 0;
@@ -419,9 +418,9 @@ int nsf_info_main(const char * iname, int track)
     } else {
       len = ftell(f);
       if (len == -1) {
-	perror(iname);
+        perror(iname);
       } else if (len < 128) {
-	fprintf(stderr, "nsfinfo : %s not an nsf file (too small).\n", iname);
+        fprintf(stderr, "nsfinfo : %s not an nsf file (too small).\n", iname);
       } else {
 	char tmp_hd[128];
 	int err;
@@ -467,19 +466,4 @@ int nsf_info_main(const char * iname, int track)
   memset(times,0,sizeof(times));
 
   return nsf_calc_time(nsf, len, track, 0, 1);
-  free (buffer);
-  return (err < 0) ? 255 : 0;
-}
-
-/* returns an int whose top bits are the length with introduction
-   and bottom bits are the length without introduction */
-unsigned int time_info(char * filename, int track)
-{
-        char argv1[] = "--   ";
-
-        snprintf(argv1+2,3,"%d" ,track);
-
-        char * argv[] = {"nsfinfo", filename, argv1, "--AT"};
-
-        return nsf_info_main(filename,track);
 }
