@@ -1,3 +1,12 @@
+3.2 (15 Aug 2023)
+
+- various cleanups
+- fixed an out-of-bounds access
+- removed lots of dead code from nsfinfo
+- rewrote much of the time calculation code
+- dumping now respects repetition parameter
+- added new readme
+
 3.1 (7 Aug 2023)
 
 - now, only one track is dumped when it's selected
