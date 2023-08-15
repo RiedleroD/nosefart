@@ -236,9 +236,6 @@ static void nsf_displaysonglengths(char *filename) {
         loop_seconds = (double)loop_frames / nsf->playback_rate;
         intro_seconds = (double)intro_frames / nsf->playback_rate;
 
-        int frames = get_time(0, filename, i);
-        double seconds = (double)frames / nsf->playback_rate;
-
         printf("%12d %9.2f | %11d %9.2f\n", intro_frames, intro_seconds,
                loop_frames, loop_seconds);
     }
