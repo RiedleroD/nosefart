@@ -148,25 +148,37 @@ static void printsonginfo(int current_frame, int total_frames, int limited) {
     /*Why not printf directly?  Our termios hijinks for input kills the output*/
     char *ui = (char *)malloc(255);
 
-    snprintf(
-        ui, 254,
-        total_frames != 0
-            ? "Playing track %d/%d, channels %c%c%c%c%c%c, %d/%d sec, %d/%d "
-              "frames\r"
-            : (limited ? "Playing track %d/%d, channels %c%c%c%c%c%c, %d/? "
-                         "sec, %11$d/? frames (Working...)\r"
-                       : "Playing track %d/%d, channels %c%c%c%c%c%c, %d "
-                         "sec, %11$d frames\r"),
-        nsf->current_song, nsf->num_songs, enabled[0] ? '1' : '-',
-        enabled[1] ? '2' : '-', enabled[2] ? '3' : '-', enabled[3] ? '4' : '-',
-        enabled[4] ? '5' : '-', enabled[5] ? '6' : '-',
-        abs((int)((float)(current_frame + nsf->playback_rate) /
-                  (float)nsf->playback_rate) -
-            1), /* the sound gets buffered a lot... */
-        abs((int)((float)(total_frames + nsf->playback_rate) /
-                  (float)nsf->playback_rate) -
-            1), /* this is something of an estimate */
-        current_frame, total_frames);
+    uint16_t curtime = abs((int)((float)(current_frame + nsf->playback_rate)
+        / (float)nsf->playback_rate) - 1);
+    /* this is something of an estimate */
+    uint16_t totaltime = abs((int)((float)(total_frames + nsf->playback_rate) /
+                  (float)nsf->playback_rate) - 1);
+
+    int offset = snprintf(
+            ui, 254,
+            "Playing track %d/%d, channels %c%c%c%c%c%c, %d",
+            nsf->current_song,
+            nsf->num_songs,
+            enabled[0] ? '1' : '-', enabled[1] ? '2' : '-', enabled[2] ? '3' : '-',
+            enabled[3] ? '4' : '-', enabled[4] ? '5' : '-', enabled[5] ? '6' : '-',
+            curtime);
+
+    if(total_frames != 0)
+        snprintf(
+            ui+offset, 254-offset,
+            "/%d sec, %d/%d frames\r",
+            totaltime,
+            current_frame, total_frames);
+    else if(limited)
+        snprintf(
+            ui+offset, 254-offset,
+            "/? sec, %d/? frames (Working...)\r",
+            current_frame);
+    else
+        snprintf(
+            ui+offset, 254-offset,
+            " sec, %d frames\r",
+            current_frame);
 
     if (!(current_frame % 10)) {
         char blank[82];
