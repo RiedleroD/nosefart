@@ -74,7 +74,6 @@ static void init_sdl(void) {
     wanted.freq = freq;
     wanted.format = format;
     wanted.channels = 1;
-    wanted.silence = 0;
     wanted.samples = 1024;
     wanted.callback = NULL;
 
@@ -87,9 +86,10 @@ static void init_sdl(void) {
 }
 
 static void init_buffer() {
-    dataSize = freq / nsf->playback_rate * (bits / 8);
-    bufferSize = ((freq * bits) / 8) / 2;
-    buffer = malloc((bufferSize / dataSize + 1) * dataSize);
+    uint16_t sample_size = bits / 8;
+    dataSize = (freq / nsf->playback_rate) * sample_size;
+    bufferSize = (freq * sample_size) / 10; // ~100ms
+    buffer = malloc(bufferSize);
     bufferPos = buffer;
     memset(buffer, 0, bufferSize);
 }
@@ -340,8 +340,6 @@ static void play(char *filename, int track, int doautocalc, int reps,
         nsf_frame(nsf);
         frames++;
 
-        printsonginfo(frames, plimit_frames);
-
         /* don't waste time if skipping frames (this check speeds it up a lot)
          */
         if (frames >= starting_frame) {
@@ -352,13 +350,10 @@ static void play(char *filename, int track, int doautocalc, int reps,
 
         if (bufferPos >= buffer + bufferSize) {
             if (frames >= starting_frame) {
+                int queuesize = SDL_GetQueuedAudioSize(1);
                 SDL_QueueAudio(1, buffer, bufferPos - buffer);
-
-                float bytesPerSecond = (float) (freq * bits) / 8;
-
-                SDL_Delay(
-                    ((int)(SDL_GetQueuedAudioSize(1) / bytesPerSecond * 1000)) /
-                    2);
+                SDL_Delay(1000 * queuesize / (freq * bits / 8) / 4);
+                printsonginfo(frames, plimit_frames);
             }
 
             bufferPos = buffer;
