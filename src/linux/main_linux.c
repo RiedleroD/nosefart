@@ -26,7 +26,7 @@ static int dataSize;
 static int bufferSize;
 static unsigned char *buffer = 0, *bufferPos = 0;
 
-static int *plimit_frames = NULL;
+static int plimit_frames = 0;
 
 static int frames; /* I like global variables too much */
 
@@ -49,7 +49,7 @@ static int get_time(int repetitions, int track) {
 }
 
 void handle_auto_calc(int track, int reps) {
-    *plimit_frames = get_time(reps, track);
+    plimit_frames = get_time(reps, track);
 }
 
 static void init_sdl(void) {
@@ -345,7 +345,7 @@ static void play(char *filename, int track, int doautocalc, int reps,
         nsf_frame(nsf);
         frames++;
 
-        printsonginfo(frames, *plimit_frames);
+        printsonginfo(frames, plimit_frames);
 
         /* don't waste time if skipping frames (this check speeds it up a lot)
          */
@@ -369,7 +369,7 @@ static void play(char *filename, int track, int doautocalc, int reps,
             bufferPos = buffer;
         }
 
-        if (*plimit_frames != 0 && frames >= *plimit_frames) {
+        if (plimit_frames != 0 && frames >= plimit_frames) {
             done = 1;
         }
 
@@ -423,7 +423,7 @@ static void dump(char* filename, char *dumpname, int track) {
             bufferPos = buffer;
         }
 
-        if (frames >= 50 && frames >= *plimit_frames) {
+        if (frames >= 50 && frames >= plimit_frames) {
             done = 1;
         }
     }
@@ -472,8 +472,7 @@ int main(int argc, char **argv) {
 
     const char *opts = "123456hvit:f:B:s:l:r:b:a:o:";
 
-    plimit_frames = (int *)malloc(sizeof(int));
-    *plimit_frames = 0;
+    plimit_frames = 0;
 
     while (!done) {
         char c;
@@ -513,7 +512,7 @@ int main(int argc, char **argv) {
             limit_time = atoi(optarg);
             break;
         case 'r':
-            *plimit_frames = atoi(optarg);
+            plimit_frames = atoi(optarg);
             limit_time = 0; // prefer frame limit when specified after time limit
             break;
         case 'b':
@@ -558,7 +557,7 @@ int main(int argc, char **argv) {
     nsf->playback_rate *= speed_multiplier;
 
     if (limit_time != 0) {
-        *plimit_frames = limit_time * nsf->playback_rate;
+        plimit_frames = limit_time * nsf->playback_rate;
     }
 
     if (justdisplayinfo > 0) {
