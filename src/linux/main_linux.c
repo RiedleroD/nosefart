@@ -146,16 +146,14 @@ static void show_version(void) {
 }
 
 static void printsonginfo(int current_frame, int total_frames) {
-    /*Why not printf directly?  Our termios hijinks for input kills the output*/
-    char *ui = (char *)malloc(255);
+    size_t strsize = 81;
+    char* ui = malloc(strsize * sizeof(char));
+    int offset = 0;
 
     uint16_t curtime = abs((int)((float)(current_frame + nsf->playback_rate)
         / (float)nsf->playback_rate) - 1);
-    /* this is something of an estimate */
-    uint16_t totaltime = abs((int)((float)(total_frames + nsf->playback_rate) /
-                  (float)nsf->playback_rate) - 1);
 
-    int offset = snprintf(
+    offset += snprintf(
             ui, 254,
             "Playing track %d/%d, channels %c%c%c%c%c%c, %d",
             nsf->current_song,
@@ -164,27 +162,24 @@ static void printsonginfo(int current_frame, int total_frames) {
             enabled[3] ? '4' : '-', enabled[4] ? '5' : '-', enabled[5] ? '6' : '-',
             curtime);
 
-    if(total_frames != 0)
-        snprintf(
-            ui+offset, 254-offset,
-            "/%d sec, %d/%d frames\r",
+    if(total_frames != 0) {
+        int totaltime = (float)(total_frames) / (float)nsf->playback_rate;
+        offset += snprintf(
+            ui+offset, strsize-offset,
+            "/%d sec, %d/%d frames",
             totaltime,
             current_frame, total_frames);
-    else
-        snprintf(
-            ui+offset, 254-offset,
-            " sec, %d frames\r",
+    } else {
+        offset += snprintf(
+            ui+offset, strsize-offset,
+            " sec, %d frames",
             current_frame);
-
-    if (!(current_frame % 10)) {
-        char blank[82];
-        memset(blank, ' ', 80);
-        blank[80] = '\r';
-        blank[81] = '\0';
-        write(STDOUT_FILENO, (void *)blank, 81);
     }
 
-    write(STDOUT_FILENO, (void *)ui, strlen(ui));
+    memset(ui+offset, ' ', strsize-offset-1);
+    ui[strsize-1] = '\r';
+
+    write(STDOUT_FILENO, ui, strsize);
     free(ui);
 }
 
