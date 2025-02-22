@@ -479,7 +479,7 @@ int main(int argc, char **argv) {
     const char *opts = "123456hvit:f:B:s:l:r:b:a:o:";
 
     plimit_frames = (int *)malloc(sizeof(int));
-    plimit_frames[0] = 0;
+    *plimit_frames = 0;
 
     while (!done) {
         char c;
@@ -521,6 +521,7 @@ int main(int argc, char **argv) {
             break;
         case 'r':
             *plimit_frames = atoi(optarg);
+            limit_time = 0; // prefer frame limit when specified after time limit
             limited = 1;
             break;
         case 'b':
@@ -565,6 +566,10 @@ int main(int argc, char **argv) {
 
     nsf->playback_rate *= speed_multiplier;
 
+    if (limit_time != 0) {
+        *plimit_frames = limit_time * nsf->playback_rate;
+    }
+
     if (justdisplayinfo > 0) {
         nsf_displayinfo();
         if (justdisplayinfo > 1)
@@ -593,10 +598,6 @@ int main(int argc, char **argv) {
     } else {
         init_buffer();
         init_sdl();
-
-        if (limit_time != 0) {
-            *plimit_frames = limit_time * nsf->playback_rate;
-        }
 
         play(filename, track, doautocalc, reps, starting_frame, limited);
     }
