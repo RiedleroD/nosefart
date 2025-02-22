@@ -145,7 +145,7 @@ static void show_version(void) {
     exit(0);
 }
 
-static void printsonginfo(int current_frame, int total_frames, int limited) {
+static void printsonginfo(int current_frame, int total_frames) {
     /*Why not printf directly?  Our termios hijinks for input kills the output*/
     char *ui = (char *)malloc(255);
 
@@ -170,11 +170,6 @@ static void printsonginfo(int current_frame, int total_frames, int limited) {
             "/%d sec, %d/%d frames\r",
             totaltime,
             current_frame, total_frames);
-    else if(limited)
-        snprintf(
-            ui+offset, 254-offset,
-            "/? sec, %d/? frames (Working...)\r",
-            current_frame);
     else
         snprintf(
             ui+offset, 254-offset,
@@ -205,7 +200,7 @@ static void sync_channels(void) {
 
 /* start track, display which it is, and what channels are enabled */
 static void nsf_setupsong() {
-    printsonginfo(0, 0, 0);
+    printsonginfo(0, 0);
     nsf_playtrack(nsf, nsf->current_song, freq, bits);
     sync_channels();
 
@@ -324,7 +319,7 @@ static void setup_term() {
 }
 
 static void play(char *filename, int track, int doautocalc, int reps,
-                 int starting_frame, int limited) {
+                 int starting_frame) {
     int done = 0;
     frames = 0;
 
@@ -350,7 +345,7 @@ static void play(char *filename, int track, int doautocalc, int reps,
         nsf_frame(nsf);
         frames++;
 
-        printsonginfo(frames, *plimit_frames, limited);
+        printsonginfo(frames, *plimit_frames);
 
         /* don't waste time if skipping frames (this check speeds it up a lot)
          */
@@ -473,7 +468,6 @@ int main(int argc, char **argv) {
     int dumpwav = 0;
     int doautocalc = 0;
     int reps = 0, limit_time = 0, starting_frame = 0;
-    int limited = 0;
     float speed_multiplier = 1;
 
     const char *opts = "123456hvit:f:B:s:l:r:b:a:o:";
@@ -517,19 +511,16 @@ int main(int argc, char **argv) {
             break;
         case 'l':
             limit_time = atoi(optarg);
-            limited = 1;
             break;
         case 'r':
             *plimit_frames = atoi(optarg);
             limit_time = 0; // prefer frame limit when specified after time limit
-            limited = 1;
             break;
         case 'b':
             starting_frame = atoi(optarg);
             break;
         case 'a':
             doautocalc = 1;
-            limited = 1;
             reps = atoi(optarg);
             break;
         case 'o':
@@ -599,7 +590,7 @@ int main(int argc, char **argv) {
         init_buffer();
         init_sdl();
 
-        play(filename, track, doautocalc, reps, starting_frame, limited);
+        play(filename, track, doautocalc, reps, starting_frame);
     }
 
     close_nsf_file();
