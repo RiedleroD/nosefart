@@ -413,7 +413,7 @@ static void dump(char* filename, char *dumpname, int track) {
             bufferPos = buffer;
         }
 
-        if (frames >= 50 && frames >= plimit_frames) {
+        if (frames >= plimit_frames) {
             done = 1;
         }
     }
@@ -555,6 +555,11 @@ int main(int argc, char **argv) {
         if (justdisplayinfo > 1)
             nsf_displaysonglengths(filename);
     } else if (dumpwav) {
+        // safety limit of 2 minutes
+        if (plimit_frames == 0) {
+            plimit_frames = 120 * nsf->playback_rate;
+        }
+
         init_buffer();
 
         mkdir(dumpwavdir, 0777);
