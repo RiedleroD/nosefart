@@ -23,7 +23,7 @@ Options:
 	-r x	Limit total playing time to x frames (0 = unlimited)
 	-b x	Skip the first x frames
 	-a x	Calculate song length and play x repetitions (0 = intro only)
-	-i	Just print file information and exit
+	-i	Just print file information and exit (specify twice for subsong lengths)
 	-x	Start with channel x disabled (-123456)
 	-o x	Output WAV file(s) to directory x
 ```

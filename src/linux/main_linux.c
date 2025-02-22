@@ -118,7 +118,7 @@ static void show_help(void) {
     printf("\t-b x\tSkip the first x frames\n");
     printf("\t-a x\tCalculate song length and play x repetitions (0 = intro "
            "only)\n");
-    printf("\t-i\tJust print file information and exit\n");
+    printf("\t-i\tJust print file information and exit (specify twice for subsong lengths)\n");
     printf("\t-x\tStart with channel x disabled (-123456)\n");
     printf("\t-o x\tOutput WAV file(s) to directory x\n\n");
     printf("\nPlease send bug reports to dev@riedler.wien\n");
@@ -513,7 +513,7 @@ int main(int argc, char **argv) {
             speed_multiplier = atof(optarg);
             break;
         case 'i':
-            justdisplayinfo = 1;
+            justdisplayinfo++;
             break;
         case 'l':
             limit_time = atoi(optarg);
@@ -565,9 +565,10 @@ int main(int argc, char **argv) {
 
     nsf->playback_rate *= speed_multiplier;
 
-    if (justdisplayinfo) {
+    if (justdisplayinfo > 0) {
         nsf_displayinfo();
-        nsf_displaysonglengths(filename);
+        if (justdisplayinfo > 1)
+            nsf_displaysonglengths(filename);
     } else if (dumpwav) {
         init_buffer();
 
