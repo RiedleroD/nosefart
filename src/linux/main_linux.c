@@ -121,7 +121,7 @@ static void show_help(void) {
     printf("\t-i\tJust print file information and exit\n");
     printf("\t-x\tStart with channel x disabled (-123456)\n");
     printf("\t-o x\tOutput WAV file(s) to directory x\n\n");
-    printf("\nPlease send bug reports to quadong@users.sf.net\n");
+    printf("\nPlease send bug reports to dev@riedler.wien\n");
 
     exit(0);
 }
@@ -132,7 +132,7 @@ static void show_warranty(void) {
     printf("(See the file COPYING in the source tree.)\n\n");
 }
 
-static void show_info(void) {
+static void show_version(void) {
     printf("%s -- NSF player for Linux\n", NAME);
     printf("Version " VERSION " ");
     printf("Compiled with GCC %i.%i on %s %s\n", __GNUC__, __GNUC_MINOR__,
@@ -140,6 +140,7 @@ static void show_info(void) {
     printf("\nNSF support by Matthew Conte. ");
     printf("Inspired by the MSP 0.50 source release by Sevy\nand Marp. ");
     printf("Ported by Neil Stevens.  Some changes by Matthew Strait.\n");
+    printf("Cleanups and modernizations by Lisa Riedler.\n");
 
     exit(0);
 }
@@ -496,7 +497,7 @@ int main(int argc, char **argv) {
             enabled[(int)(c - '0' - 1)] = FALSE;
             break;
         case 'v':
-            show_info();
+            show_version();
             break;
         case 't':
             track = strtol(optarg, 0, 10);
