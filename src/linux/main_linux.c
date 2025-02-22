@@ -500,10 +500,13 @@ int main(int argc, char **argv) {
             break;
         case 'l':
             limit_time = atoi(optarg);
+            doautocalc = 0;
+            plimit_frames = 0;
             break;
         case 'r':
             plimit_frames = atoi(optarg);
             limit_time = 0; // prefer frame limit when specified after time limit
+            doautocalc = 0;
             break;
         case 'b':
             starting_frame = atoi(optarg);
@@ -511,6 +514,8 @@ int main(int argc, char **argv) {
         case 'a':
             doautocalc = 1;
             reps = atoi(optarg);
+            limit_time = 0;
+            plimit_frames = 0;
             break;
         case 'o':
             dumpwav = 1;
