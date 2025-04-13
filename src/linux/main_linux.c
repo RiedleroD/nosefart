@@ -465,7 +465,7 @@ int main(int argc, char **argv) {
     plimit_frames = 0;
 
     while (!done) {
-        char c;
+        signed char c;
 
         switch (c = getopt(argc, argv, opts)) {
         case EOF:
